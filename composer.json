@@ -1,0 +1,31 @@
+{
+    "name": "ginger/emspay_payments",
+    "description": "EMS Online payments all-in-one plugin",
+    "version": "v1.0.0",
+    "type": "shopware-platform-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ginger Payments"
+        }
+    ],
+    "require": {
+        "shopware/core": "*"
+    },
+    "extra": {
+        "shopware-plugin-class": "Ginger\\EmsPay\\EmsPay",
+        "label": {
+            "de-DE": "Ginger Zahlungen",
+            "en-GB": "Ginger Payments"
+        },
+        "description": {
+            "de-DE": "Ginger Zahlung Bibliothek",
+            "en-GB": "Ginger Payments Library"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Ginger\\EmsPay\\": "src/"
+        }
+    }
+}
