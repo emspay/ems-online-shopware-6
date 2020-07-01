@@ -2,7 +2,7 @@
 
 namespace Ginger\EmsPay;
 
-use Ginger\EmsPay\Vendor\Gateway;
+use Ginger\EmsPay\Service\Gateway;
 
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;

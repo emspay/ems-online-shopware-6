@@ -29,8 +29,7 @@ class getConfig implements EventSubscriberInterface
 
     public function onPaymentLoaded(EntityLoadedEvent $event): void
     {
-        $exampleConfig = $this->systemConfigService->get('EmsPay.config');
-
+print_r(123);exit;
     }
 }
 

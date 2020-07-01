@@ -56,7 +56,48 @@ class Helper
         return dirname(__FILE__).'/assets/cacert.pem';
     }
 
-    static function prnt_info($data){
-        print_r($data);exit;
+    /**
+     * The function which call the method what return a link to finalize action
+     * @param $transaction
+     * @return string
+     */
+    public function getReturnUrl($transaction){
+        return $transaction->getReturnUrl();
+    }
+
+    public function getAmountInCents(){
+        return '';
+    }
+
+    public function getCurrencyName(){
+        return '';
+    }
+
+    public function getOrderNumber(){
+        return '';
+    }
+
+    public function getOrderDescription(){
+        return '';
+    }
+
+    public function getCustomer(){
+        return '';
+    }
+
+    public function getOrderLines(){
+        return '';
+    }
+
+    public function getTransactions(){
+        return '';
+    }
+
+    public function getWebhookUrl(){
+        return '';
+    }
+
+    public function getPluginVersion(){
+        return '';
     }
 }

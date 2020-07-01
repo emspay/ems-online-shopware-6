@@ -51,7 +51,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     ): RedirectResponse {
         // Method that sends the return URL to the external gateway and gets a redirect URL back
         try {
-            $redirectUrl = $this->sendReturnUrlToExternalGateway($transaction->getReturnUrl());
+            print_r($this->processOrder($transaction));
         } catch (\Exception $e) {
             throw new AsyncPaymentProcessException(
                 $transaction->getOrderTransaction()->getId(),
@@ -71,7 +71,6 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         Request $request,
         SalesChannelContext $salesChannelContext
     ): void {
-        print_r('finnale');exit;
         $transactionId = $transaction->getOrderTransaction()->getId();
 
         // Cancelled payment?
@@ -97,9 +96,19 @@ class Gateway implements AsynchronousPaymentHandlerInterface
 
     private function processOrder($transaction): array
     {
-        $preOrder = $this->ginger->createOrder(
-
-        );
+        $preOrder = array_filter([
+            'amount' => $this->helper->getAmountInCents(),                                // Amount in cents
+            'currency' => $this->helper->getCurrencyName(),                                                 // Currency
+            'merchant_order_id' => $this->helper->getOrderNumber(),                                         // Merchant Order Id
+            'description' => $this->helper->getOrderDescription(),           // Description
+            'customer' => $this->helper->getCustomer(),                                                // Customer information
+            'payment_info' => [],                                                                           // Payment info
+            'order_lines' => $this->helper->getOrderLines(),  // Order Lines
+            'transactions' => $this->helper->getTransactions(),                        // Transactions Array
+            'return_url' => $this->helper->getReturnUrl($transaction),                                      // Return URL
+            'webhook_url' => $this->helper->getWebhookUrl(),  // Webhook URL
+            'extra' => ['plugin' => $this->helper->getPluginVersion()],                                     // Extra information
+        ]);
     return $preOrder;
     }
 }
