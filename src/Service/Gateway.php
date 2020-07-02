@@ -51,7 +51,8 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     ): RedirectResponse {
         // Method that sends the return URL to the external gateway and gets a redirect URL back
         try {
-            print_r($this->processOrder($transaction));
+            $pre_order = $this->processOrder($transaction->getOrder(),$transaction->getReturnUrl(),$salesChannelContext);
+            $order = $this->ginger->createOrder($pre_order);
         } catch (\Exception $e) {
             throw new AsyncPaymentProcessException(
                 $transaction->getOrderTransaction()->getId(),
@@ -60,7 +61,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         }
 
         // Redirect to external gateway
-        return new RedirectResponse($redirectUrl);
+        return new RedirectResponse($order['order_url']);
     }
 
     /**
@@ -89,26 +90,25 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         $this->transactionStateHandler->pay($transaction->getOrderTransaction()->getId(), $context);
         } else {
         // Payment not completed, set transaction status to "open"
-        $this->transactionStateHandler->reopen($transaction->getOrderTransaction()->getId(), $context);
+        $this->transactionStateHandler->cancel($transaction->getOrderTransaction()->getId(), $context);
         }
 
     }
 
-    private function processOrder($transaction): array
+    private function processOrder($shopware_order,$return_url,$sales_channel_context): array
     {
-        $preOrder = array_filter([
-            'amount' => $this->helper->getAmountInCents(),                                // Amount in cents
-            'currency' => $this->helper->getCurrencyName(),                                                 // Currency
-            'merchant_order_id' => $this->helper->getOrderNumber(),                                         // Merchant Order Id
+        return array_filter([
+            'amount' => $this->helper->getAmountInCents($shopware_order->getAmountTotal()),                                // Amount in cents
+            'currency' => $sales_channel_context->getCurrency()->getIsoCode(),                                                 // Currency
+            'merchant_order_id' => $shopware_order->getOrderNumber(),                                         // Merchant Order Id
             'description' => $this->helper->getOrderDescription(),           // Description
-            'customer' => $this->helper->getCustomer(),                                                // Customer information
+            'customer' => $this->helper->getCustomer($shopware_order->getOrderCustomer(), $sales_channel_context->getCustomer()),                                                // Customer information
             'payment_info' => [],                                                                           // Payment info
             'order_lines' => $this->helper->getOrderLines(),  // Order Lines
             'transactions' => $this->helper->getTransactions(),                        // Transactions Array
-            'return_url' => $this->helper->getReturnUrl($transaction),                                      // Return URL
+            'return_url' => $return_url,                                      // Return URL
             'webhook_url' => $this->helper->getWebhookUrl(),  // Webhook URL
             'extra' => ['plugin' => $this->helper->getPluginVersion()],                                     // Extra information
         ]);
-    return $preOrder;
     }
 }

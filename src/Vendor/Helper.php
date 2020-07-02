@@ -57,16 +57,15 @@ class Helper
     }
 
     /**
-     * The function which call the method what return a link to finalize action
-     * @param $transaction
-     * @return string
+     * Get amount of the order in cents
+     *
+     * @param $amount
+     * @return int
      */
-    public function getReturnUrl($transaction){
-        return $transaction->getReturnUrl();
-    }
 
-    public function getAmountInCents(){
-        return '';
+    public function getAmountInCents($order_amount)
+    {
+        return (int) round ((float) $order_amount * 100);
     }
 
     public function getCurrencyName(){
@@ -81,8 +80,46 @@ class Helper
         return '';
     }
 
-    public function getCustomer(){
-        return '';
+    protected function getGender($salutation){
+        if ($salutation!="")
+            return $salutation == 'mr' ? 'male' : 'female';
+        else
+            return '';
+    }
+
+    /**
+     * Function creating customer array
+     *
+     * @param $info
+     * @return array
+     *
+     */
+    public function getCustomer($info_order_transaction,$info_sales_channel){
+        return array_filter([
+            'gender' => $this->getGender($info_order_transaction->getSalutation()->getSalutationKey()),
+            'birthdate' => '',
+            'address_type' => 'customer',
+            'country' => $info_sales_channel->getActiveBillingAddress()->getCountry()->getIso(),
+            'email_address' => $info_order_transaction->getEmail(),
+            'first_name' => $info_sales_channel->getFirstName(),
+            'last_name' => $info_sales_channel->getLastName(),
+            'merchant_customer_id' => (string)$info_order_transaction->getCustomerNumber(),
+            'phone_numbers' => '',
+            'address' => $this->getShippingAddress($info_sales_channel->getActiveShippingAddress()),
+            'locale' => '',
+            'ip_address' => $info_order_transaction->getRemoteAddress(),
+            'additional_addresses' => '',
+        ]);
+    }
+
+    protected function getShippingAddress($shipping){
+        return implode("\n", array_filter(array(
+                trim($shipping->getAdditionalAddressLine1()),
+                trim($shipping->getAdditionalAddressLine2()),
+                trim($shipping->getStreet()),
+                trim($shipping->getZipcode()),
+                trim($shipping->getCity())
+            )));
     }
 
     public function getOrderLines(){
