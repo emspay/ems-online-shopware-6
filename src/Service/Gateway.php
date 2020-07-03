@@ -73,6 +73,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         SalesChannelContext $salesChannelContext
     ): void {
         $transactionId = $transaction->getOrderTransaction()->getId();
+        $order = $this->ginger->getOrder($_GET['order_id']);
 
         // Cancelled payment?
         if ($request->query->getBoolean('cancel')) {
@@ -82,9 +83,13 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         );
         }
 
+        /**
         $paymentState = $request->query->getAlpha('status');
 
+*/
         $context = $salesChannelContext->getContext();
+        $paymentState = $order['status'];
+
         if ($paymentState === 'completed') {
         // Payment completed, set transaction status to "paid"
         $this->transactionStateHandler->pay($transaction->getOrderTransaction()->getId(), $context);
@@ -105,7 +110,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             'customer' => $this->helper->getCustomer($shopware_order->getOrderCustomer(), $sales_channel_context->getCustomer()),                                                // Customer information
             'payment_info' => [],                                                                           // Payment info
             'order_lines' => $this->helper->getOrderLines(),  // Order Lines
-            'transactions' => $this->helper->getTransactions(),                        // Transactions Array
+            'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod()),                        // Transactions Array
             'return_url' => $return_url,                                      // Return URL
             'webhook_url' => $this->helper->getWebhookUrl(),  // Webhook URL
             'extra' => ['plugin' => $this->helper->getPluginVersion()],                                     // Extra information

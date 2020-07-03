@@ -53,23 +53,39 @@ class EmsPay extends Plugin
 
         /** @var PluginIdProvider $pluginIdProvider */
         $pluginIdProvider = $this->container->get(PluginIdProvider::class);
+        $pluginId = $pluginIdProvider->getPluginIdByBaseClass(\get_class($this), $context);
+        /** @var EntityRepositoryInterface $paymentRepository */
+
+        $paymentRepository = $this->container->get('payment_method.repository');
 
         /**
-         *  PayNow
+         *  Pay Now
          */
-        $pluginId = $pluginIdProvider->getPluginIdByBaseClass(\get_class($this), $context);
-
         $emspay_paynow = [
             // payment handler will be selected by the identifier
             'handlerIdentifier' => Gateway::class,
-            'name' => 'EMS Online Pay Now',
-            'description' => 'Pay using EMS Online',
+            'name' => 'EMS Online - Pay Now',
+            'description' => 'emspay_paynow',
             'pluginId' => $pluginId,
+            'afterOrderEnabled' => true,
         ];
 
-        /** @var EntityRepositoryInterface $paymentRepository */
-        $paymentRepository = $this->container->get('payment_method.repository');
         $paymentRepository->create([$emspay_paynow], $context);
+
+        /**
+         *  Apple Pay
+         */
+        $emspay_applepay = [
+            // payment handler will be selected by the identifier
+            'handlerIdentifier' => Gateway::class,
+            'name' => 'EMS Online - Apple Pay',
+            'description' => 'emspay_applepay',
+            'pluginId' => $pluginId,
+            'afterOrderEnabled' => true,
+        ];
+
+        $paymentRepository->create([$emspay_applepay], $context);
+
     }
 
     private function setPaymentMethodIsActive(bool $active, Context $context): void

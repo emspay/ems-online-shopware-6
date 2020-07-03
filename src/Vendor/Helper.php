@@ -4,6 +4,28 @@ namespace Ginger\EmsPay\Vendor;
 
 class Helper
 {
+
+    /**
+     *  Translator Shopware 6 Payment Description into payment names for Ginger API
+     */
+    const SHOPWARE_TO_EMS_PAYMENTS =
+        [
+            'applepay' => 'apple-pay',
+            'klarnapaylater' => 'klarna-pay-later',
+            'klarnapaynow' => 'klarna-pay-now',
+            'paynow' => null,
+            'ideal' => 'ideal',
+            'afterpay' => 'afterpay',
+            'amex' => 'amex',
+            'bancontact' => 'bancontact',
+            'banktransfer' => 'bank-transfer',
+            'creditcard' => 'credit-card',
+            'payconiq' => 'payconiq',
+            'paypal' => 'paypal',
+            'tikkiepaymentrequest' => 'tikkie-payment-request',
+            'wechat' => 'wechat',
+        ];
+
     /**
      * EMS Online ShopWare plugin version
      */
@@ -126,8 +148,8 @@ class Helper
         return '';
     }
 
-    public function getTransactions(){
-        return '';
+    public function getTransactions($payment){
+        return self::SHOPWARE_TO_EMS_PAYMENTS[explode('emspay_',$payment->getDescription())[1]];
     }
 
     public function getWebhookUrl(){
