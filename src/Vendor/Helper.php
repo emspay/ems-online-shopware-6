@@ -167,4 +167,9 @@ class Helper
     public function getWebhookUrl(){
         return implode('',[$_SERVER['HTTP_HOST'],'/EmsPay/Webhook']);
     }
+
+    public function getExtraArray($id){
+        return ['plugin' => sprintf('ShopWare 6 v%s', self::PLUGIN_VERSION),
+                'sw_order_id' => $id];
+    }
 }
