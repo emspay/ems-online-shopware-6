@@ -36,7 +36,6 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         $this->orderService = $orderService;
 
         $this->helper = new Helper();
-
         $EmsPayConfig = $systemConfigService->get('EmsPay.config');
         $this->ginger = $this->helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
     }
@@ -51,17 +50,18 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     ): RedirectResponse {
         // Method that sends the return URL to the external gateway and gets a redirect URL back
         try {
-            $pre_order = $this->processOrder($transaction->getOrder(),$transaction->getReturnUrl(),$salesChannelContext);
+            $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
         } catch (\Exception $e) {
             throw new AsyncPaymentProcessException(
                 $transaction->getOrderTransaction()->getId(),
-                'An error occurred during the communication with external payment gateway' . PHP_EOL . $e->getMessage()
+                'An error occurred during the creating the EMS Online order' . PHP_EOL . $e->getMessage()
             );
         }
-
         // Redirect to external gateway
-        return new RedirectResponse($order['order_url']);
+        return new RedirectResponse(
+            isset($order['order_url']) ? $order['order_url'] : current($order['transactions'])['payment_url']
+        );
     }
 
     /**
@@ -74,46 +74,36 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     ): void {
         $transactionId = $transaction->getOrderTransaction()->getId();
         $order = $this->ginger->getOrder($_GET['order_id']);
-
-        // Cancelled payment?
-        if ($request->query->getBoolean('cancel')) {
-        throw new CustomerCanceledAsyncPaymentException(
-        $transactionId,
-        'Customer canceled the payment on the PayPal page'
-        );
-        }
-
-        /**
-        $paymentState = $request->query->getAlpha('status');
-
-*/
         $context = $salesChannelContext->getContext();
         $paymentState = $order['status'];
 
-        if ($paymentState === 'completed') {
-        // Payment completed, set transaction status to "paid"
-        $this->transactionStateHandler->pay($transaction->getOrderTransaction()->getId(), $context);
-        } else {
-        // Payment not completed, set transaction status to "open"
-        $this->transactionStateHandler->cancel($transaction->getOrderTransaction()->getId(), $context);
+        switch ($paymentState) {
+            case 'completed' : $this->transactionStateHandler->pay($transaction->getOrderTransaction()->getId(), $context); break;
+            case 'cancelled' : $this->transactionStateHandler->cancel($transaction->getOrderTransaction()->getId(), $context); break;
+            case 'error' : $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $context); break;
+            case 'new' : $this->transactionStateHandler->reopen($transaction->getOrderTransaction()->getId(), $context); break;
+            case 'processing' : $this->transactionStateHandler->process($transaction->getOrderTransaction()->getId(), $context); break;
+            case 'error' : throw new CustomerCanceledAsyncPaymentException(
+                $transactionId,
+                (current($order['transactions'])['reason'])
+            ); break;
         }
-
     }
 
-    private function processOrder($shopware_order,$return_url,$sales_channel_context): array
+    private function processOrder($transaction,$sales_channel_context): array
     {
         return array_filter([
-            'amount' => $this->helper->getAmountInCents($shopware_order->getAmountTotal()),                                // Amount in cents
+            'amount' => $this->helper->getAmountInCents($transaction->getOrder()->getAmountTotal()),                                // Amount in cents
             'currency' => $sales_channel_context->getCurrency()->getIsoCode(),                                                 // Currency
-            'merchant_order_id' => $shopware_order->getOrderNumber(),                                         // Merchant Order Id
+            'merchant_order_id' => $transaction->getOrder()->getOrderNumber(),                                         // Merchant Order Id
             'description' => $this->helper->getOrderDescription(),           // Description
-            'customer' => $this->helper->getCustomer($shopware_order->getOrderCustomer(), $sales_channel_context->getCustomer()),                                                // Customer information
+            'customer' => $this->helper->getCustomer($transaction->getOrder()->getOrderCustomer(), $sales_channel_context->getCustomer()),                                                // Customer information
             'payment_info' => [],                                                                           // Payment info
             'order_lines' => $this->helper->getOrderLines(),  // Order Lines
             'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod()),                        // Transactions Array
-            'return_url' => $return_url,                                      // Return URL
+            'return_url' => $transaction->getReturnUrl(),                                      // Return URL
             'webhook_url' => $this->helper->getWebhookUrl(),  // Webhook URL
-            'extra' => ['plugin' => $this->helper->getPluginVersion()],                                     // Extra information
+            'extra' => ['sw_order_id' => $transaction->getOrderTransaction()->getId()],                                     // Extra information
         ]);
     }
 }

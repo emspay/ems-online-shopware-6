@@ -149,14 +149,22 @@ class Helper
     }
 
     public function getTransactions($payment){
-        return self::SHOPWARE_TO_EMS_PAYMENTS[explode('emspay_',$payment->getDescription())[1]];
+
+        $ginger_payment = self::SHOPWARE_TO_EMS_PAYMENTS[explode('emspay_',$payment->getDescription())[1]];
+
+        return array_filter([
+            array_filter([
+                'payment_method' => $ginger_payment,
+                'payment_method_details' => array_filter(['issuer_id' => $this->getIssuerId($ginger_payment)])
+            ])
+        ]);
+    }
+
+    protected function getIssuerId($ginger_payment){
+        return null;
     }
 
     public function getWebhookUrl(){
-        return '';
-    }
-
-    public function getPluginVersion(){
-        return '';
+        return implode('',[$_SERVER['HTTP_HOST'],'/EmsPay/Webhook']);
     }
 }
