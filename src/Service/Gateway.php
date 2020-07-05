@@ -53,6 +53,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
         } catch (\Exception $e) {
+            print_r($e->getMessage());
             throw new AsyncPaymentProcessException(
                 $transaction->getOrderTransaction()->getId(),
                 'An error occurred during the creating the EMS Online order' . PHP_EOL . $e->getMessage()
@@ -80,10 +81,10 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         switch ($paymentState) {
             case 'completed' : $this->transactionStateHandler->pay($transaction->getOrderTransaction()->getId(), $context); break;
             case 'cancelled' : $this->transactionStateHandler->cancel($transaction->getOrderTransaction()->getId(), $context); break;
-            case 'error' : $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $context); break;
             case 'new' : $this->transactionStateHandler->reopen($transaction->getOrderTransaction()->getId(), $context); break;
             case 'processing' : $this->transactionStateHandler->process($transaction->getOrderTransaction()->getId(), $context); break;
-            case 'error' : throw new CustomerCanceledAsyncPaymentException(
+            case 'error' : $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $context);
+            throw new CustomerCanceledAsyncPaymentException(
                 $transactionId,
                 (current($order['transactions'])['reason'])
             ); break;
@@ -93,17 +94,17 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     private function processOrder($transaction,$sales_channel_context): array
     {
         return array_filter([
-            'amount' => $this->helper->getAmountInCents($transaction->getOrder()->getAmountTotal()),                                            // Amount in cents
-            'currency' => $sales_channel_context->getCurrency()->getIsoCode(),                                                                  // Currency
-            'merchant_order_id' => $transaction->getOrder()->getOrderNumber(),                                                                  // Merchant Order Id
-            'description' => $this->helper->getOrderDescription(),                                                                              // Description
-            'customer' => $this->helper->getCustomer($transaction->getOrder()->getOrderCustomer(), $sales_channel_context->getCustomer()),      // Customer information
-            'payment_info' => [],                                                                                                               // Payment info
-            'order_lines' => $this->helper->getOrderLines(),                                                                                    // Order Lines
-            'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod()),                                       // Transactions Array
-            'return_url' => $transaction->getReturnUrl(),                                                                                       // Return URL
-            'webhook_url' => $this->helper->getWebhookUrl(),                                                                                    // Webhook URL
-            'extra' => $this->helper->getExtraArray($transaction->getOrderTransaction()->getId())                                               // Extra information
+            'amount' => $this->helper->getAmountInCents($transaction->getOrder()->getAmountTotal()),                                                     // Amount in cents
+            'currency' => $sales_channel_context->getCurrency()->getIsoCode(),                                                                           // Currency
+            'merchant_order_id' => $transaction->getOrder()->getOrderNumber(),                                                                           // Merchant Order Id
+            'description' => $this->helper->getOrderDescription($transaction->getOrder()->getOrderNumber(),$sales_channel_context->getSalesChannel()),   // Description
+            'customer' => $this->helper->getCustomer($sales_channel_context->getCustomer()),                                                             // Customer information
+            'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                          // Order Lines
+            'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(),$this->ginger->getIdealIssuers()),               // Transactions Array
+            'return_url' => $transaction->getReturnUrl(),                                                                                                // Return URL
+            'webhook_url' => $this->helper->getWebhookUrl(),                                                                                             // Webhook URL
+            'extra' => $this->helper->getExtraArray($transaction->getOrderTransaction()->getId()),                                                       // Extra information
+            'payment_info' => [],                                                                                                                        // Payment info
         ]);
     }
 }

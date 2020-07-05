@@ -11,7 +11,7 @@
             <argument type="service" id="Shopware\Core\Checkout\Order\SalesChannel\OrderService" />
             <tag name="shopware.payment.method.async" />
         </service>
-        <service id="Ginger\EmsPay\Subscriber\onOrderCreated">
+        <service id="Ginger\EmsPay\Subscriber\captureOrder">
             <tag name="kernel.event_subscriber"/>
         </service>
         <service id="Ginger\EmsPay\Controller\Webhook" public="true">

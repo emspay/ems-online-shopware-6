@@ -4,21 +4,20 @@ namespace Ginger\EmsPay\Subscriber;
 
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Shopware\Core\Checkout\Cart\CartEvents;
+use Shopware\Core\Checkout\Order\OrderEvents;
 
-class onOrderCreated implements EventSubscriberInterface
+class captureOrder implements EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
     {
         // Return the events to listen to as array like this:  <event to listen to> => <method to execute>
         return [
-            CartEvents::CHECKOUT_ORDER_PLACED => 'onOrderCreated'
+            OrderEvents::ORDER_DELIVERY_WRITTEN_EVENT => 'DeliveryTime'
         ];
     }
 
-    public function onOrderCreated(EntityLoadedEvent $event): void
+    public function DeliveryTime(EntityLoadedEvent $event): void
     {
-        print_r('123123');
-        exit;
+        print_r("There is still nothing");
     }
 }
