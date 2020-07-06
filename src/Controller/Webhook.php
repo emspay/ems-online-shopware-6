@@ -3,7 +3,6 @@
 namespace Ginger\EmsPay\Controller;
 
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
-use Ginger\EmsPay\Vendor\Helper;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Shopware\Core\Framework\Context;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,6 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
+use Ginger\EmsPay\Service\Helper;
 /**
  * @RouteScope(scopes={"storefront"})
  */
@@ -45,13 +45,14 @@ class Webhook extends AbstractController
      * Webhook constructor.
      * @param OrderTransactionStateHandler $transactionStateHandler
      * @param SystemConfigService $systemConfigService
+     * @param Helper $helper
      */
 
-    public function __construct(OrderTransactionStateHandler $transactionStateHandler, SystemConfigService $systemConfigService)
+    public function __construct(OrderTransactionStateHandler $transactionStateHandler, SystemConfigService $systemConfigService, Helper $helper)
     {
         $this->transactionStateHandler = $transactionStateHandler;
         $this->EmsPayConfig = $systemConfigService->get('EmsPay.config');
-        $this->helper = new Helper();
+        $this->helper = $helper;
         $EmsPayConfig = $systemConfigService->get('EmsPay.config');
         $this->ginger = $this->helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
     }

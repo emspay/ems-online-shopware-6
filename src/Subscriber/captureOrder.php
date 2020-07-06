@@ -2,7 +2,7 @@
 
 namespace Ginger\EmsPay\Subscriber;
 
-use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityLoadedEvent;
+use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Shopware\Core\Checkout\Order\OrderEvents;
 
@@ -16,7 +16,7 @@ class captureOrder implements EventSubscriberInterface
         ];
     }
 
-    public function DeliveryTime(EntityLoadedEvent $event): void
+    public function DeliveryTime(EntityWrittenEvent $event): void
     {
         print_r("There is still nothing");
     }

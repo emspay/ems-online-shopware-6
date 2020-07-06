@@ -2,7 +2,7 @@
 
 namespace Ginger\EmsPay\Service;
 
-use Ginger\EmsPay\Vendor\Helper;
+use Ginger\ApiClient;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
@@ -14,12 +14,19 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Shopware\Core\Framework\Plugin;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
-use Shopware\Core\Checkout\Order\SalesChannel\OrderService;
 
 class Gateway implements AsynchronousPaymentHandlerInterface
 {
 
+    /**
+     * @var Helper
+     */
+
     private $helper;
+
+    /**
+     * @var ApiClient
+     */
 
     private $ginger;
 
@@ -28,14 +35,17 @@ class Gateway implements AsynchronousPaymentHandlerInterface
      */
     private $transactionStateHandler;
 
-    private $orderService;
+    /**
+     * Gateway constructor.
+     * @param OrderTransactionStateHandler $transactionStateHandler
+     * @param SystemConfigService $systemConfigService
+     * @param Helper $helper
+     */
 
-    public function __construct(OrderTransactionStateHandler $transactionStateHandler, SystemConfigService $systemConfigService,OrderService $orderService )
+    public function __construct(OrderTransactionStateHandler $transactionStateHandler, SystemConfigService $systemConfigService, Helper $helper)
     {
         $this->transactionStateHandler = $transactionStateHandler;
-        $this->orderService = $orderService;
-
-        $this->helper = new Helper();
+        $this->helper = $helper;
         $EmsPayConfig = $systemConfigService->get('EmsPay.config');
         $this->ginger = $this->helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
     }
@@ -53,7 +63,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
         } catch (\Exception $e) {
-            print_r($e->getMessage());
+            print_r($e->getMessage()); exit;
             throw new AsyncPaymentProcessException(
                 $transaction->getOrderTransaction()->getId(),
                 'An error occurred during the creating the EMS Online order' . PHP_EOL . $e->getMessage()

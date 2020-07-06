@@ -1,6 +1,6 @@
 <?php
 
-namespace Ginger\EmsPay\Vendor;
+namespace Ginger\EmsPay\Service;
 
 use Ginger\ApiClient;
 use Ginger\Ginger;
@@ -50,7 +50,7 @@ class Helper
      */
 
     public function __construct(){
-        require_once ("vendor/autoload.php");
+        include (dirname(__FILE__)."/../Vendor/vendor/autoload.php");
     }
 
     /**
@@ -77,7 +77,7 @@ class Helper
      */
 
     protected static function getCaCertPath(){
-        return dirname(__FILE__).'/assets/cacert.pem';
+        return dirname(__FILE__).'/../Vendor/assets/cacert.pem';
     }
 
     /**
@@ -306,7 +306,7 @@ class Helper
      */
 
     public function getOrderLines($sales,$order){
-        if (in_array($sales->getPaymentMethod(),['emspay_klarnapaylater','emspay_afterpay']))
+        if (!in_array($sales->getPaymentMethod(),['emspay_klarnapaylater','emspay_afterpay']))
         {
             return null;
         }
