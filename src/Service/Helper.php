@@ -8,6 +8,16 @@ use Ginger\Ginger;
 class Helper
 {
 
+    const SHOPWARE_STATES_TO_GINGER =
+        [
+            'paid' => 'completed',
+            'open' => 'new',
+            'cancelled' => 'cancelled',
+            'processing' => 'processing',
+            'pending' => 'pending',
+            'failed' => 'error'
+        ];
+
     /**
      *  Translator Shopware 6 Payment Description into payment names for Ginger API
      */
