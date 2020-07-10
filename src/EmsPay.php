@@ -74,7 +74,7 @@ class EmsPay extends Plugin
         }
     }
 
-    protected function addGignerPayment($name,$label,$paymentRepository,$pluginId,$context)
+    private function addGignerPayment($name,$label,$paymentRepository,$pluginId,$context)
     {
         $payment = [
             // payment handler will be selected by the identifier

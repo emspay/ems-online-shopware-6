@@ -19,7 +19,7 @@ Manual installation of the Shopware 6 plugin using (s)FTP
 1. Unzip your archive with the plugin. Put the 'EmsPay' folder to the directory <i><b>root</b></i>/custom/plugins/. 
 2. Go to the admin panel, this will be '/admin' in your URL address. 
 3. Open tab Settings>System>Plugins. 
-    * In list front of you search "Ginger Payments"
+    * In list front of you search "EMS Online"
     * On the last column click the button with three dots, this will show an additional menu.
     * Click the "Install" Field. 
     * After the installation in the same menu click the "Config" field.  
@@ -31,10 +31,9 @@ Manual installation of the Shopware 6 plugin using (s)FTP
     * Click the "Edit" field.
     * On next opened form turn switch "Active" to enable payment.
     * After all changes click "Save" button to save the changes. 
-5. Once the modules are installed you can offer the payment methods in your webshop.
-    * In the left menu opens your Sales Channel, by default he called "Storefront".
-    * On "General" tab, you can find the area fix settings which called "General Settings"
-    * On that area find the "Payment methods " options.
-    * Click on the empty space to see the list of payments, you can multi-select one, or more Ginger Payments from all payments list to add their to offer in Shop.
-    * After all, operations click the "Save" button to save changes.
+5. Once you installed the plugin - offer the payment methods in your webshop.
+    * On the left menu opens your Sales Channel, by default this called "Storefront".
+    * On "General" tab, you can find the block "General Settings"
+    * On that area find the "Payments " options.
+    * Click on the empty space to see the list of payments, you can multi-select one, or more EMS Online payments from the list to add their to offer in Shop.    * After all, operations click the "Save" button to save changes.
 6. Compatibility: Shopware 6.*
