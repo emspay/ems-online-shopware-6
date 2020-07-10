@@ -86,6 +86,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         $transactionId = $transaction->getOrderTransaction()->getId();
         $order = $this->ginger->getOrder($_GET['order_id']);
         $context = $salesChannelContext->getContext();
+        $transaction->getOrderTransaction()->setCustomFields(['ginger_order_id' => $order['id']]);
         $paymentState = $order['status'];
         if (!($this->helper::SHOPWARE_STATES_TO_GINGER[$transaction->getOrderTransaction()->getStateMachineState()->getTechnicalName()] == $paymentState))
             switch ($paymentState) {
@@ -94,6 +95,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             case 'new' : $this->transactionStateHandler->reopen($transaction->getOrderTransaction()->getId(), $context); break;
             case 'processing' : $this->transactionStateHandler->process($transaction->getOrderTransaction()->getId(), $context); break;
             case 'error' : $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $context);
+            print_r('Error during transaction : '.current($order['transactions'])['reason']);exit;
             throw new CustomerCanceledAsyncPaymentException(
                 $transactionId,
                 (current($order['transactions'])['reason'])
