@@ -157,7 +157,7 @@ class Helper
             'first_name' => $info_sales_channel->getFirstName(),
             'last_name' => $info_sales_channel->getLastName(),
             'merchant_customer_id' => (string)$info_sales_channel->getCustomerNumber(),
-            'phone_numbers' => [$info_sales_channel->getActiveShippingAddress()->getPhoneNumber()],
+            'phone_numbers' => array_filter([$info_sales_channel->getActiveShippingAddress()->getPhoneNumber()]),
             'address' => $this->getAddress($info_sales_channel->getActiveShippingAddress()),
             'locale' => $info_sales_channel->getLanguage() == "" ? 'en' : $info_sales_channel->getLanguage(),
             'ip_address' => $info_sales_channel->getRemoteAddress(),
