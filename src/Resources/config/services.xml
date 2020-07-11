@@ -11,9 +11,6 @@
             <argument type="service" id="Ginger\EmsPay\Service\Helper" />
             <tag name="shopware.payment.method.async" />
         </service>
-        <service id="Ginger\EmsPay\Subscriber\captureOrder">
-            <tag name="kernel.event_subscriber"/>
-        </service>
         <service id="Ginger\EmsPay\Controller\Webhook" public="true">
             <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
@@ -21,6 +18,11 @@
         </service>
         <service id="Ginger\EmsPay\Service\Helper">
             <tag name="ginger.service.helper" />
+        </service>
+        <service id="Ginger\EmsPay\Subscriber\captureOrder">
+            <argument type="service" id="order.repository"/>
+            <argument type="service" id="order_delivery.repository"/>
+            <tag name="kernel.event_listener" event="state_machine.order_delivery.state_changed" method="onOrderDeliveryStateChange"/>
         </service>
     </services>
 </container>
