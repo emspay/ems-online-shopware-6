@@ -12,7 +12,6 @@ use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Shopware\Core\Framework\Plugin;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 
 class Gateway implements AsynchronousPaymentHandlerInterface
