@@ -52,8 +52,7 @@ class Webhook extends AbstractController
         $this->transactionStateHandler = $transactionStateHandler;
         $this->EmsPayConfig = $systemConfigService->get('EmsPay.config');
         $this->helper = $helper;
-        $EmsPayConfig = $systemConfigService->get('EmsPay.config');
-        $this->ginger = $this->helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
+        $this->ginger = $this->helper->getGignerClinet($this->EmsPayConfig['emsOnlineApikey'], $this->EmsPayConfig['emsOnlineBundleCacert']);
     }
 
     /**
@@ -71,7 +70,7 @@ class Webhook extends AbstractController
             $ginger_order = $this->ginger->getOrder($request_content->order_id);
             $shopware_order_id = $ginger_order['extra']['sw_order_id'];
 
-            if (!$ginger_order == 'new')
+            if ($ginger_order['status'] != 'new')
             $this->transactionStateHandler->reopen($shopware_order_id, $context);
 
         switch ($ginger_order['status']) {
