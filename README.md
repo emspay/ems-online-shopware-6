@@ -34,6 +34,7 @@ Manual installation of the Shopware 6 plugin using (s)FTP
 5. Once you installed the plugin - offer the payment methods in your webshop.
     * On the left menu opens your Sales Channel, by default this called "Storefront".
     * On "General" tab, you can find the block "General Settings"
-    * On that area find the "Payments " options.
-    * Click on the empty space to see the list of payments, you can multi-select one, or more EMS Online payments from the list to add their to offer in Shop.    * After all, operations click the "Save" button to save changes.
+    * On that area find the "Payment" options.
+    * Click on the empty space to see the list of payments, you can multi-select one, or more EMS Online payment methods from the list to add their to offer in Shop.    * After all, operations click the "Save" button to save changes.
+    * After all changes click "Save" button to save the changes. 
 6. Compatibility: Shopware 6.*
