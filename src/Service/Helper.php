@@ -159,9 +159,10 @@ class Helper
             'merchant_customer_id' => (string)$info_sales_channel->getCustomerNumber(),
             'phone_numbers' => array_filter([$info_sales_channel->getActiveShippingAddress()->getPhoneNumber()]),
             'address' => $this->getAddress($info_sales_channel->getActiveShippingAddress()),
-            'locale' => $info_sales_channel->getLanguage() == "" ? 'en' : $info_sales_channel->getLanguage(),
+            'locale' => $info_sales_channel->getLanguage() == "" ? 'en_GB' : $info_sales_channel->getLanguage(),
             'ip_address' => $info_sales_channel->getRemoteAddress(),
             'additional_addresses' => $this->getAdditionalAddress($info_sales_channel->getActiveBillingAddress()),
+            'postal_code' => $info_sales_channel->getActiveShippingAddress()->getZipcode(),
         ]);
     }
 
@@ -201,7 +202,7 @@ class Helper
      */
 
     protected function getAddress($address){
-        return implode("\n", array_filter(array(
+        return implode(",", array_filter(array(
                 trim($address->getAdditionalAddressLine1()),
                 trim($address->getAdditionalAddressLine2()),
                 trim($address->getStreet()),
