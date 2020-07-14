@@ -10,16 +10,16 @@ class LightEntityBase extends Entity
     /**
      * @var string
      */
-    protected $ginger_order_id;
+    protected $ems_order_id;
 
     public function getGingerOrderId(): string
     {
-        return $this->ginger_order_id;
+        return $this->ems_order_id;
     }
 
-    public function setGingerOrderId(string $ginger_order_id): void
+    public function setGingerOrderId(string $ems_order_id): void
     {
-        $this->ginger_order_id = $ginger_order_id;
+        $this->ems_order_id = $ems_order_id;
     }
 }
 ?>

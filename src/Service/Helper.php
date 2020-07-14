@@ -317,7 +317,7 @@ class Helper
      */
 
     public function getOrderLines($sales,$order){
-        if (!in_array($sales->getPaymentMethod(),['emspay_klarnapaylater','emspay_afterpay']))
+        if (!in_array($sales->getPaymentMethod()->getDescription(),['emspay_klarnapaylater','emspay_afterpay']))
         {
             return null;
         }
@@ -328,4 +328,23 @@ class Helper
         $order->getShippingCosts()->getUnitPrice() > 0 ? array_push($order_lines,self::getShippingLines($sales,$order)) : null;
         return $order_lines;
         }
+
+    /**
+     * Save the Ginger order id into LightEntity for keep link between Shopware 6 order ID and Ginger order ID
+     *
+     * @param $order_id
+     * @param $ems_order_id
+     * @param $lightGingerRepository
+     * @param $context
+     */
+
+    public function saveGingerOrderId($payment_method,$order_id,$ems_order_id,$lightGingerRepository,$context){
+        if (in_array($payment_method,['klarna-pay-later','afterpay']))
+        $lightGingerRepository->upsert([
+            [
+                'id' => $order_id,
+                'ems_order_id' => $ems_order_id
+            ]
+        ], $context);
+    }
 }

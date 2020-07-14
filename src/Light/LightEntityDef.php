@@ -32,7 +32,7 @@ class LightEntityDef extends EntityDefinition
     {
         return new FieldCollection([
             (new IdField('id', 'id'))->addFlags(new PrimaryKey(), new Required()),
-            new StringField('ginger_order_id', 'ginger_order_id'),
+            new StringField('ems_order_id', 'ems_order_id'),
         ]);
     }
 }

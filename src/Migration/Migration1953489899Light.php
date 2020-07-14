@@ -16,9 +16,9 @@ class Migration1953489899Light extends MigrationStep
     public function update(Connection $connection): void
     {
         $sql = <<<SQL
-CREATE TABLE IF NOT EXISTS `custom_entity` (
+CREATE TABLE IF NOT EXISTS `light_ginger_entity` (
     `id` BINARY(16) NOT NULL,
-    `ginger_order_id` VARCHAR(255) COLLATE utf8mb4_unicode_ci,
+    `ems_order_id` VARCHAR(255) COLLATE utf8mb4_unicode_ci,
     `created_at` DATETIME(3) NOT NULL,
     `updated_at` DATETIME(3),
     PRIMARY KEY (`id`)

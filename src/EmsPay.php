@@ -121,4 +121,9 @@ class EmsPay extends Plugin
 
         return $paymentIds->getIds()[0];
     }
+
+    public function getMigrationNamespace(): string
+    {
+        return 'Ginger\EmsPay\Migration';
+    }
 }
