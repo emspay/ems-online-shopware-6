@@ -22,10 +22,7 @@ class captureOrder
      */
     private $orderRepository;
 
-    /**
-     * @var EntityRepositoryInterface
-     */
-    private $orderTransactionRepository;
+
 
     /**
      * @var EntityRepositoryInterface
@@ -33,14 +30,16 @@ class captureOrder
     private $orderDeliveryRepository;
 
     /**
-     * @var EventDispatcherInterface
+     * @var EntityRepositoryInterface
      */
-    private $eventDispatcher;
+    private $lightGingerRepository;
 
     public function __construct(
+        EntityRepositoryInterface $lightGingerRepository,
         EntityRepositoryInterface $orderRepository,
         EntityRepositoryInterface $orderDeliveryRepository
     ) {
+        $this->lightGingerRepository = $lightGingerRepository;
         $this->orderRepository = $orderRepository;
         $this->orderDeliveryRepository = $orderDeliveryRepository;
     }
@@ -51,6 +50,10 @@ class captureOrder
      */
     public function onOrderDeliveryStateChange(StateMachineStateChangeEvent $event): void
     {
+        $light_ginger = $this->lightGingerRepository->getDefinition()->getEntityClass();
+        print_r($this->lightGingerRepository);exit;
+        $light_ginger->setGingerOrderId('123');
+
         $orderDeliveryId = $event->getTransition()->getEntityId();
         $context = $event->getContext();
 

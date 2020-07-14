@@ -20,9 +20,13 @@
             <tag name="ginger.service.helper" />
         </service>
         <service id="Ginger\EmsPay\Subscriber\captureOrder">
+            <argument type="service" id="light_ginger_entity.repository"/>
             <argument type="service" id="order.repository"/>
             <argument type="service" id="order_delivery.repository"/>
             <tag name="kernel.event_listener" event="state_machine.order_delivery.state_changed" method="onOrderDeliveryStateChange"/>
+        </service>
+        <service id="Ginger\EmsPay\Light\LightEntityDef">
+            <tag name="shopware.entity.definition" entity="light_ginger_entity" />
         </service>
     </services>
 </container>
