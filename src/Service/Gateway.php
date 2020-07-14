@@ -95,7 +95,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             case 'processing' : $this->transactionStateHandler->process($transaction->getOrderTransaction()->getId(), $context); break;
             case 'error' : $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $context);
                $message ='Error during transaction';
-               $message .= isset(current($order['transactions'])['reason']) ? ':'.isset(current($order['transactions'])['reason']) : '.';
+               $message .= isset(current($order['transactions'])['reason']) ? ':'.current($order['transactions'])['reason'].'.' : '.';
                $message .= '<br> Please contact support.';
             print_r($message);exit;
             throw new CustomerCanceledAsyncPaymentException(
