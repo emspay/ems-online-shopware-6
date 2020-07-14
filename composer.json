@@ -6,7 +6,7 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Ginger Payments"
+            "name": "EMS Online"
         }
     ],
     "require": {
@@ -15,12 +15,12 @@
     "extra": {
         "shopware-plugin-class": "Ginger\\EmsPay\\EmsPay",
         "label": {
-            "de-DE": "Ginger Zahlungen",
-            "en-GB": "Ginger Payments"
+            "de-DE": "EMS Online",
+            "en-GB": "EMS Online"
         },
         "description": {
-            "de-DE": "Ginger Zahlung Bibliothek",
-            "en-GB": "Ginger Payments Library"
+            "de-DE": "EMS Online Library",
+            "en-GB": "EMS Online Library"
         }
     },
     "autoload": {

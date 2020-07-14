@@ -2,7 +2,7 @@
 
 namespace Ginger\EmsPay;
 
-use Ginger\EmsPay\Vendor\Gateway;
+use Ginger\EmsPay\Service\Gateway;
 
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
@@ -17,6 +17,17 @@ use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
 
 class EmsPay extends Plugin
 {
+    /**
+     * Payments labels
+     */
+
+    const GINGER_PAYMENTS_LABELS = [
+        //'emspay_afterpay' => 'Afterpay',
+        'klarnapaylater' => 'Klarna Pay Later',
+        'klarnapaynow' => 'Klarna Pay Now',
+        'paynow' => 'Pay Now',
+        'applepay' => 'Apple Pay'
+        ];
 
     public function install(InstallContext $context): void
     {
@@ -53,23 +64,26 @@ class EmsPay extends Plugin
 
         /** @var PluginIdProvider $pluginIdProvider */
         $pluginIdProvider = $this->container->get(PluginIdProvider::class);
-
-        /**
-         *  PayNow
-         */
         $pluginId = $pluginIdProvider->getPluginIdByBaseClass(\get_class($this), $context);
+        /** @var EntityRepositoryInterface $paymentRepository */
 
-        $emspay_paynow = [
+        $paymentRepository = $this->container->get('payment_method.repository');
+
+        foreach (self::GINGER_PAYMENTS_LABELS as $key => $value){
+            $this->addGignerPayment($key,$value,$paymentRepository,$pluginId,$context);
+        }
+    }
+
+    private function addGignerPayment($name,$label,$paymentRepository,$pluginId,$context)
+    {
+        $payment = [
             // payment handler will be selected by the identifier
             'handlerIdentifier' => Gateway::class,
-            'name' => 'EMS Online Pay Now',
-            'description' => 'Pay using EMS Online',
+            'name' => implode(' - ',['EMS Online',$label]),
+            'description' => implode('_',['emspay',$name]),
             'pluginId' => $pluginId,
         ];
-
-        /** @var EntityRepositoryInterface $paymentRepository */
-        $paymentRepository = $this->container->get('payment_method.repository');
-        $paymentRepository->create([$emspay_paynow], $context);
+        return $paymentRepository->create([$payment], $context);
     }
 
     private function setPaymentMethodIsActive(bool $active, Context $context): void
