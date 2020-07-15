@@ -35,7 +35,17 @@ class Gateway implements AsynchronousPaymentHandlerInterface
      */
     private $transactionStateHandler;
 
+    /**
+     * @var EntityRepositoryInterface
+     */
+
     private $lightGingerRepository;
+
+    /**
+     * @var mixed
+     */
+
+    private $use_webhook;
 
     /**
      * Gateway constructor.
@@ -56,6 +66,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
         $EmsPayConfig = $systemConfigService->get('EmsPay.config');
+        $this->use_webhook = $EmsPayConfig['emsOnlineUseWebhook'];
         $this->ginger = $this->helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
     }
 
@@ -132,7 +143,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                          // Order Lines
             'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(),$this->ginger->getIdealIssuers()),               // Transactions Array
             'return_url' => $transaction->getReturnUrl(),                                                                                                // Return URL
-            'webhook_url' => $this->helper->getWebhookUrl(),                                                                                             // Webhook URL
+            'webhook_url' => $this->use_webhook ? $this->helper->getWebhookUrl() : null,                                                                                             // Webhook URL
             'extra' => $this->helper->getExtraArray($transaction->getOrderTransaction()->getId()),                                                       // Extra information
             'payment_info' => [],                                                                                                                        // Payment info
         ]);

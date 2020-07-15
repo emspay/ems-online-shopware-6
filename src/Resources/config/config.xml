@@ -28,5 +28,15 @@
             <helpText lang="nl-NL">Gebruik de cURL CA-bundle.</helpText>
             <helpText lang="fr-FR">Utilisez le bundle cURL CA.</helpText>
         </input-field>
+
+        <input-field type="bool">
+            <name>emsOnlineUseWebhook</name>
+            <defaultValue>true</defaultValue>
+            <label>EMS Online Webhook</label>
+            <helpText>Use the webhook.</helpText>
+            <helpText lang="de-DE">Verwenden Sie den Webhook.</helpText>
+            <helpText lang="nl-NL">Gebruik de webhook.</helpText>
+            <helpText lang="fr-FR">Utilisez le webhook.</helpText>
+        </input-field>
     </card>
 </config>
