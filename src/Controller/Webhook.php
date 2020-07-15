@@ -2,6 +2,12 @@
 
 namespace Ginger\EmsPay\Controller;
 
+use Ginger\ApiClient;
+use Shopware\Core\Checkout\Cart\Exception\OrderNotFoundException;
+use Shopware\Core\Checkout\Order\OrderEntity;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
 use Symfony\Component\Routing\Annotation\Route;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
@@ -23,7 +29,7 @@ class Webhook extends AbstractController
     private $helper;
 
     /**
-     * @var \Ginger\ApiClient
+     * @var ApiClient
      */
 
     private $ginger;
@@ -52,7 +58,7 @@ class Webhook extends AbstractController
         $this->transactionStateHandler = $transactionStateHandler;
         $this->EmsPayConfig = $systemConfigService->get('EmsPay.config');
         $this->helper = $helper;
-        $this->ginger = $this->helper->getGignerClinet($this->EmsPayConfig['emsOnlineApikey'], $this->EmsPayConfig['emsOnlineBundleCacert']);
+        $this->ginger = $this->helper->getClient($this->EmsPayConfig);
     }
 
     /**
@@ -69,11 +75,14 @@ class Webhook extends AbstractController
 
             $ginger_order = $this->ginger->getOrder($request_content->order_id);
             $shopware_order_id = $ginger_order['extra']['sw_order_id'];
-
-            if ($ginger_order['status'] != 'new')
-            $this->transactionStateHandler->reopen($shopware_order_id, $context);
+            try{
+                $this->transactionStateHandler->reopen($shopware_order_id, $context);
+            } catch(\Exception $exception) {
+                print('Already opened');
+            }
 
         switch ($ginger_order['status']) {
+                case 'accepted':
                 case 'completed' : $this->transactionStateHandler->paid($shopware_order_id, $context); break;
                 case 'cancelled' : $this->transactionStateHandler->cancel($shopware_order_id, $context); break;
                 case 'error' : $this->transactionStateHandler->fail($shopware_order_id, $context); break;

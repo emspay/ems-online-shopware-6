@@ -64,6 +64,30 @@ class Helper
     }
 
     /**
+     *  Get the Ginger Client using client configuration
+     *
+     * @param object $config
+     * @param null $method
+     * @return ApiClient
+     */
+    public function getClient($config, $method = null)
+    {
+        $method = $this->translatePaymentMethod($method);
+
+        switch ($method) {
+            case 'klarna-pay-later' :
+                $api_key = !empty($config['emsOnlineKlarnaTestApikey']) ? $config['emsOnlineKlarnaTestApikey'] : $config['emsOnlineApikey'];
+                break;
+            case 'afterpay' :
+                $api_key = !empty(['emsOnlineAfterpayTestApikey']) ? $config['emsOnlineAfterpayTestApikey'] : $config['emsOnlineApikey'];
+                break;
+            default :
+                $api_key = $config['emsOnlineApikey'];
+        }
+        return $this->getGignerClinet($api_key,$config['emsOnlineBundleCacert']);
+    }
+
+    /**
      * create a gigner clinet instance
      *
      * @param string $apiKey
@@ -212,6 +236,15 @@ class Helper
     }
 
     /**
+     * @param $payment
+     * @return mixed
+     */
+
+    private function translatePaymentMethod($payment){
+        return !is_null($payment) ? self::SHOPWARE_TO_EMS_PAYMENTS[explode('emspay_',$payment)[1]] : null;
+    }
+
+    /**
      * Get transactions array which includes required API information
      *
      * @param $payment
@@ -221,7 +254,7 @@ class Helper
 
     public function getTransactions($payment,$issuer){
 
-        $ginger_payment = self::SHOPWARE_TO_EMS_PAYMENTS[explode('emspay_',$payment->getDescription())[1]];
+        $ginger_payment = $this->translatePaymentMethod($payment->getDescription());
 
         return array_filter([
             array_filter([

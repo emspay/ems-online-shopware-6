@@ -51,7 +51,7 @@ class captureOrder
         $this->orderRepository = $orderRepository;
         $this->orderDeliveryRepository = $orderDeliveryRepository;
         $EmsPayConfig = $systemConfigService->get('EmsPay.config');
-        $this->ginger = $helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
+        $this->ginger = $helper->getClient($EmsPayConfig);
     }
 
     /**

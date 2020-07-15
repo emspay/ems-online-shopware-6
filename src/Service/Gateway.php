@@ -48,6 +48,12 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     private $use_webhook;
 
     /**
+     * @var
+     */
+
+    private $EmsPayConfig;
+
+    /**
      * Gateway constructor.
      * @param OrderTransactionStateHandler $transactionStateHandler
      * @param SystemConfigService $systemConfigService
@@ -65,9 +71,8 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         $this->lightGingerRepository = $lightGingerRepository;
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
-        $EmsPayConfig = $systemConfigService->get('EmsPay.config');
-        $this->use_webhook = $EmsPayConfig['emsOnlineUseWebhook'];
-        $this->ginger = $this->helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
+        $this->EmsPayConfig = $systemConfigService->get('EmsPay.config');
+        $this->use_webhook = $this->EmsPayConfig['emsOnlineUseWebhook'];
     }
 
     /**
@@ -80,6 +85,10 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     ): RedirectResponse {
         // Method that sends the return URL to the external gateway and gets a redirect URL back
         try {
+            $this->ginger = $this->helper->getClient(
+                $this->EmsPayConfig,
+                $transaction->getOrderTransaction()->getPaymentMethod()->getDescription()
+            );
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
         } catch (\Exception $e) {
@@ -103,7 +112,10 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         Request $request,
         SalesChannelContext $salesChannelContext
     ): void {
-        $transactionId = $transaction->getOrderTransaction()->getId();
+        $this->ginger = $this->helper->getClient(
+            $this->EmsPayConfig,
+            $salesChannelContext->getPaymentMethod()->getDescription()
+        );
         $order = $this->ginger->getOrder($_GET['order_id']);
         $context = $salesChannelContext->getContext();
         $paymentState = $order['status'];

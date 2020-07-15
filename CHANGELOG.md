@@ -8,3 +8,6 @@
 
 * Add orderCapture functionality
 * Add Webhook settings option
+* Add Test API-Key options in settings for 
+    * Klarna Pay Later
+    * Afterpay
