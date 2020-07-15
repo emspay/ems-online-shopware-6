@@ -8,6 +8,7 @@ use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
 use Shopware\Core\Checkout\Payment\Exception\CustomerCanceledAsyncPaymentException;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -34,6 +35,8 @@ class Gateway implements AsynchronousPaymentHandlerInterface
      */
     private $transactionStateHandler;
 
+    private $lightGingerRepository;
+
     /**
      * Gateway constructor.
      * @param OrderTransactionStateHandler $transactionStateHandler
@@ -41,8 +44,15 @@ class Gateway implements AsynchronousPaymentHandlerInterface
      * @param Helper $helper
      */
 
-    public function __construct(OrderTransactionStateHandler $transactionStateHandler, SystemConfigService $systemConfigService, Helper $helper)
+    public function __construct
+    (
+        EntityRepositoryInterface $lightGingerRepository,
+        OrderTransactionStateHandler $transactionStateHandler,
+        SystemConfigService $systemConfigService,
+        Helper $helper
+    )
     {
+        $this->lightGingerRepository = $lightGingerRepository;
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
         $EmsPayConfig = $systemConfigService->get('EmsPay.config');
@@ -85,11 +95,17 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         $transactionId = $transaction->getOrderTransaction()->getId();
         $order = $this->ginger->getOrder($_GET['order_id']);
         $context = $salesChannelContext->getContext();
-        $transaction->getOrderTransaction()->setCustomFields(['ginger_order_id' => $order['id']]);
         $paymentState = $order['status'];
         if (!($this->helper::SHOPWARE_STATES_TO_GINGER[$transaction->getOrderTransaction()->getStateMachineState()->getTechnicalName()] == $paymentState))
             switch ($paymentState) {
-            case 'completed' : $this->transactionStateHandler->paid($transaction->getOrderTransaction()->getId(), $context); break;
+            case 'completed' :
+                $this->helper->saveGingerOrderId(
+                    current($order['transactions'])['payment_method'],
+                    $transaction->getOrderTransaction()->getId(),
+                    $order['id'],
+                    $this->lightGingerRepository,
+                    $context);
+                $this->transactionStateHandler->paid($transaction->getOrderTransaction()->getId(), $context); break;
             case 'cancelled' : $this->transactionStateHandler->cancel($transaction->getOrderTransaction()->getId(), $context); break;
             case 'new' : $this->transactionStateHandler->reopen($transaction->getOrderTransaction()->getId(), $context); break;
             case 'processing' : $this->transactionStateHandler->process($transaction->getOrderTransaction()->getId(), $context); break;
