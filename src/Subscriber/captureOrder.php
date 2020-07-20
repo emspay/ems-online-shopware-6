@@ -88,6 +88,7 @@ class captureOrder
         try {
             $emsOrder = $this->ginger->getOrder($ems_order_id);
             $transactionId = !empty(current($emsOrder['transactions'])) ? current($emsOrder['transactions'])['id'] : null;
+            if (!(current($emsOrder['transactions'])['is_fully_captured']))
             $this->ginger->captureOrderTransaction($ems_order_id,$transactionId);
 
         } catch (Exception $exception) {
