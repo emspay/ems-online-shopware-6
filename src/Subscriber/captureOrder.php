@@ -23,7 +23,6 @@ class captureOrder
     /**
      * @var ApiClient
      */
-
     protected $ginger;
 
     /**
@@ -41,6 +40,11 @@ class captureOrder
      */
     private $lightGingerRepository;
 
+    /**
+     * @var Helper
+     */
+    protected $helper;
+
     public function __construct(
         EntityRepositoryInterface $lightGingerRepository,
         EntityRepositoryInterface $orderRepository,
@@ -48,6 +52,7 @@ class captureOrder
         SystemConfigService $systemConfigService,
         Helper $helper
     ) {
+        $this->helper = $helper;
         $this->lightGingerRepository = $lightGingerRepository;
         $this->orderRepository = $orderRepository;
         $this->orderDeliveryRepository = $orderDeliveryRepository;
@@ -92,6 +97,7 @@ class captureOrder
             $this->ginger->captureOrderTransaction($ems_order_id,$transactionId);
 
         } catch (Exception $exception) {
+            $this->helper->saveEMSLog($exception->getMessage(), ['FILE' => __FILE__, 'FUNCTION' => __FUNCTION__, 'LINE' => __LINE__]);
             print_r($exception->getMessage());exit;
         }
         }
