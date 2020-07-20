@@ -4,6 +4,8 @@ namespace Ginger\EmsPay\Service;
 
 use Ginger\ApiClient;
 use Ginger\Ginger;
+use Shopware\Core\Framework\Log\LoggerFactory;
+use Monolog\Processor\WebProcessor;
 
 class Helper
 {
@@ -59,8 +61,14 @@ class Helper
      * Constructor of the class which includes ginger-php autoload
      */
 
-    public function __construct(){
+    /**
+     *  Logger Factory
+     */
+    private $loggerFactory;
+
+    public function __construct(LoggerFactory $loggerFactory){
         include (dirname(__FILE__)."/../Vendor/vendor/autoload.php");
+        $this->loggerFactory = $loggerFactory;
     }
 
     /**
@@ -327,5 +335,18 @@ class Helper
         }
         $order->getShippingCosts()->getUnitPrice() > 0 ? array_push($order_lines,self::getShippingLines($sales,$order)) : null;
         return $order_lines;
-        }
+    }
+
+    /**
+     * Function saveEMSLog
+     * Writes a log to a file /app/var/log/ems_plugin_%environment%-%current date%. If there are more than 7 logging files in the log directory, removes the oldest
+     *
+     * @param $msg
+     * @param $context
+     */
+    public function saveEMSLog($msg, $context) {
+        $ems_logger = $this->loggerFactory->createRotating('ems_plugin', 7);
+        $ems_logger->pushProcessor(new WebProcessor());
+        $ems_logger->error($msg, $context);
+    }
 }

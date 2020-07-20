@@ -62,6 +62,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
         } catch (\Exception $e) {
+            $this->helper->saveEMSLog($e->getMessage(), ['FILE' => __FILE__, 'FUNCTION' => __FUNCTION__, 'LINE' => __LINE__]);
             print_r($e->getMessage()); exit;
             throw new AsyncPaymentProcessException(
                 $transaction->getOrderTransaction()->getId(),
@@ -97,6 +98,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
                $message ='Error during transaction';
                $message .= isset(current($order['transactions'])['reason']) ? ':'.current($order['transactions'])['reason'].'.' : '.';
                $message .= '<br> Please contact support.';
+            $this->helper->saveEMSLog($message, ['FILE' => __FILE__, 'FUNCTION' => __FUNCTION__, 'LINE' => __LINE__]);
             print_r($message);exit;
             throw new CustomerCanceledAsyncPaymentException(
                 $transactionId,

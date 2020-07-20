@@ -18,6 +18,7 @@
         </service>
         <service id="Ginger\EmsPay\Service\Helper">
             <tag name="ginger.service.helper" />
+            <argument type="service" id="Shopware\Core\Framework\Log\LoggerFactory"/>
         </service>
         <service id="Ginger\EmsPay\Subscriber\captureOrder">
             <argument type="service" id="order.repository"/>
