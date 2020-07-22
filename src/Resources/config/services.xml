@@ -31,5 +31,10 @@
         <service id="Ginger\EmsPay\Light\LightEntityDef">
             <tag name="shopware.entity.definition" entity="light_ginger_entity" />
         </service>
+        <service id="Ginger\EmsPay\Subscriber\paymentKeeper">
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <argument type="service" id="payment_method.repository"/>
+            <tag name="kernel.event_listener" event="sales_channel.loaded" method="onPaymentMethodConfigure" />
+        </service>
     </services>
 </container>
