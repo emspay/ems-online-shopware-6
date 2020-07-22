@@ -25,12 +25,6 @@ class paymentKeeper
     private $paymentMethodRepository;
 
     /**
-     * @var EntityRepositoryInterface
-     */
-
-    private $salesChanelRepository;
-
-    /**
      * paymentKeeper constructor.
      * @param SystemConfigService $systemConfigService
      * @param EntityRepositoryInterface $paymentMethodRepository
@@ -109,15 +103,16 @@ class paymentKeeper
         if ($ginger_payment_label[0] == 'emspay' && in_array($ginger_payment_label[1], ['klarnapaylater', 'afterpay'])){
             switch ($ginger_payment_label[1]) {
                 case 'afterpay' :
-                    $test_ip = $this->EmsPayConfig['emsOnlineAfterpayTestIP'];
+                    $ip_list = array_map('trim', explode(",",$this->EmsPayConfig['emsOnlineAfterpayTestIP']));
                     break;
                 case 'klarnapaylater' :
-                    $test_ip = $this->EmsPayConfig['emsOnlineKlarnaPayLaterTestIP'];
+                    $ip_list = array_map('trim', explode(",",$this->EmsPayConfig['emsOnlineKlarnaPayLaterTestIP']));
                     break;
             }
             $request = Request::createFromGlobals();
             $ip = $request->getClientIp();
-            return isset($test_ip) ? $ip == $test_ip : true;
+
+            return !empty(array_filter($ip_list)) ? in_array($ip,$ip_list) : true;
         }
         return true;
     }
