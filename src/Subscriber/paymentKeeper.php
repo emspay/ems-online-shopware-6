@@ -25,6 +25,12 @@ class paymentKeeper
     private $paymentMethodRepository;
 
     /**
+     * @var Request
+     */
+
+    private $request;
+
+    /**
      * paymentKeeper constructor.
      * @param SystemConfigService $systemConfigService
      * @param EntityRepositoryInterface $paymentMethodRepository
@@ -35,6 +41,7 @@ class paymentKeeper
         EntityRepositoryInterface $paymentMethodRepository
     )
     {
+        $this->request = Request::createFromGlobals();
         $this->paymentMethodRepository = $paymentMethodRepository;
         $this->EmsPayConfig = $systemConfigService->get('EmsPay.config');
     }
@@ -92,6 +99,17 @@ class paymentKeeper
     }
 
     /**
+     * A function that matches the user's locale matches with the locales specified in the plugin settings for Afterpay payment method.
+     *
+     * @return bool
+     */
+
+    protected function checkCountryAviability(){
+        $country_list = array_map('trim',explode(',',$this->EmsPayConfig['emsOnlineAfterPayCountries']));
+        return in_array(strtoupper($this->request->getLocale()),$country_list);
+    }
+
+    /**
      * A function that matches the user's IP address with the address specified in the plugin settings
      *
      * @param $payment
@@ -103,15 +121,14 @@ class paymentKeeper
         if ($ginger_payment_label[0] == 'emspay' && in_array($ginger_payment_label[1], ['klarnapaylater', 'afterpay'])){
             switch ($ginger_payment_label[1]) {
                 case 'afterpay' :
+                    if (!$this->checkCountryAviability()) return false;
                     $ip_list = array_map('trim', explode(",",$this->EmsPayConfig['emsOnlineAfterpayTestIP']));
                     break;
                 case 'klarnapaylater' :
                     $ip_list = array_map('trim', explode(",",$this->EmsPayConfig['emsOnlineKlarnaPayLaterTestIP']));
                     break;
             }
-            $request = Request::createFromGlobals();
-            $ip = $request->getClientIp();
-
+            $ip = $this->request->getClientIp();
             return !empty(array_filter($ip_list)) ? in_array($ip,$ip_list) : true;
         }
         return true;

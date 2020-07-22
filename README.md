@@ -30,7 +30,8 @@ Manual installation of the Shopware 6 plugin using (s)FTP
         * Test API key field. Copy the API Key of your test webshop in the Test API key field. When your Klarna application is approved an extra test webshop was created for you to use in your test with Klarna. The name of this webshop starts with ‘TEST Klarna’.
         * Klarna IP For the payment method Klarna you can choose to offer it only to a limited set of whitelisted IP addresses. You can use this for instance when you are in the testing phase and want to make sure that Klarna is not available yet for your customers. If you do not offer Klarna you can leave the Test API key and Klarna debug IP fields empty.
     * Are you offering Afterpay on your pay page?
-        * See the instructions for Klarna
+        * To allow AfterPay to be used for any other country just add its country code (in ISO 2 standard) to the "Countries available for AfterPay" field. Example: BE, NL, FR.
+        * See the instructions for Klarna.
     * Then turn switch what named "Activate", to turn on the plugin.
 4. Open tab Settings>Shop>Payment. There you can find payment method what you want to use. By default all payment after installation is disabled. To set payment as active:
     * Choice payment from the list of all payment methods.

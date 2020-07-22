@@ -8,7 +8,6 @@
 
         <input-field>
             <name>emsOnlineApikey</name>
-            <copyable>true</copyable>
             <label>EMS Online API-Key</label>
             <label lang="de-DE">EMS Online API-Schlüssel</label>
             <label lang="nl-NL">EMS Online API-sleutel</label>
@@ -21,8 +20,8 @@
 
         <input-field type="bool">
             <name>emsOnlineBundleCacert</name>
-            <defaultValue>true</defaultValue>
             <label>EMS Online CaCert</label>
+            <disabled>false</disabled>
             <helpText>Use the cURL CA bundle.</helpText>
             <helpText lang="de-DE">cURL CA bündel benutzen.</helpText>
             <helpText lang="nl-NL">Gebruik de cURL CA-bundle.</helpText>
@@ -31,8 +30,8 @@
 
         <input-field type="bool">
             <name>emsOnlineUseWebhook</name>
-            <defaultValue>true</defaultValue>
             <label>EMS Online Webhook</label>
+            <disabled>false</disabled>
             <helpText>Use the webhook.</helpText>
             <helpText lang="de-DE">Verwenden Sie den Webhook.</helpText>
             <helpText lang="nl-NL">Gebruik de webhook.</helpText>
@@ -41,7 +40,6 @@
 
         <input-field>
             <name>emsOnlineKlarnaTestApikey</name>
-            <copyable>true</copyable>
             <label>EMS Online Klarna Test API-Key</label>
             <label lang="de-DE">EMS Online Klarna Test API-Schlüssel</label>
             <label lang="nl-NL">EMS Online Klarna Test API-sleutel</label>
@@ -54,7 +52,6 @@
 
         <input-field>
             <name>emsOnlineAfterpayTestApikey</name>
-            <copyable>true</copyable>
             <label>EMS Online Afterpay Test API-Key</label>
             <label lang="de-DE">EMS Online Afterpay Test API-Schlüssel</label>
             <label lang="nl-NL">EMS Online Afterpay Test API-sleutel</label>
@@ -67,7 +64,6 @@
 
         <input-field>
             <name>emsOnlineAfterpayTestIP</name>
-            <copyable>true</copyable>
             <label>EMS Online Afterpay Test IP address</label>
             <label lang="de-DE">EMS Online Afterpay Test IP-Adresse</label>
             <label lang="nl-NL">EMS Online Afterpay Test IP-adres</label>
@@ -80,7 +76,6 @@
 
         <input-field>
             <name>emsOnlineKlarnaPayLaterTestIP</name>
-            <copyable>true</copyable>
             <label>EMS Online Klarna Pay Later Test IP address</label>
             <label lang="de-DE">EMS Online Klarna Pay Later Test IP-Adresse</label>
             <label lang="nl-NL">EMS Online Klarna Pay Later Test IP-adres</label>
@@ -89,6 +84,20 @@
             <helpText lang="de-DE">Sie können bestimmte IP-Adressen angeben, für die Klarna Pay Later sichtbar ist, z. B. wenn Sie Klarna Pay Later testen möchten. Sie können IP-Adressen als 128.0.0.1, 255.255.255.255 eingeben. Wenn Sie dieses Feld leer lassen, ist Klarna Pay Later für alle IP-Adressen sichtbar.</helpText>
             <helpText lang="nl-NL">U kunt specifieke IP-adressen specificeren waarvoor Klarna Pay Later zichtbaar is, bijvoorbeeld als u Klarna Pay Later wilt testen. U kunt IP-adressen typen als 128.0.0.1, 255.255.255.255. Als je dit leeg laat is Klarna Pay Later zichtbaar voor alle IP-adressen.</helpText>
             <helpText lang="fr-FR">Vous pouvez spécifier des adresses IP spécifiques pour lesquelles Klarna Pay Later est visible, par exemple si vous souhaitez tester Klarna Pay Later. Vous pouvez taper des adresses IP comme 128.0.0.1, 255.255.255.255. Si vous laissez ce champ Klarna Pay Later vide, il est visible par toutes les adresses IP.</helpText>
+        </input-field>
+
+        <input-field type="text">
+            <name>emsOnlineAfterPayCountries</name>
+            <label>Countries available for AfterPay</label>
+            <label lang="de-DE">Für AfterPay verfügbare Länder</label>
+            <label lang="nl-NL">Landen beschikbaar voor AfterPay</label>
+            <label lang="fr-FR">Pays disponibles pour AfterPay</label>
+            <placeholder>NL,BE,FR</placeholder>
+            <defaultValue>NL,BE</defaultValue>
+            <helpText>To allow AfterPay to be used for any other country just add its country code (in ISO 2 standard) to the "Countries available for AfterPay" field. Example: BE, NL, FR.</helpText>
+            <helpText lang="de-DE">Um AfterPay für jedes andere Land verwenden zu können, fügen Sie einfach seinen Ländercode (in ISO 2-Norm) in das Feld "Für AfterPay verfügbare Länder" ein. Beispiel: BE, NL, FR.</helpText>
+            <helpText lang="nl-NL">Om AfterPay voor elk ander land te kunnen gebruiken, voegt u gewoon de landcode (in ISO 2-norm) toe aan het veld "Beschikbare landen voor AfterPay". Voorbeeld: BE, NL, FR.</helpText>
+            <helpText lang="fr-FR">Pour autoriser AfterPay à être utilisé pour tout autre pays, ajoutez simplement son code de pays (dans la norme ISO 2) dans le champ "Pays disponibles pour AfterPay". Exemple: BE, NL, FR.</helpText>
         </input-field>
     </card>
 </config>

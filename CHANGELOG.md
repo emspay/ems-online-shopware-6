@@ -14,3 +14,4 @@
 * Add Test IP Address options in settings for 
     * Afterpay
     * Klarna Pay Later
+* Add Country Validation
