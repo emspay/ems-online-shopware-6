@@ -2,15 +2,15 @@
 
 namespace Ginger\EmsPay\Controller;
 
-use Symfony\Component\Routing\Annotation\Route;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
+use Symfony\Component\Routing\Annotation\Route;
 use Ginger\ApiClient;
+use Ginger\EmsPay\Service\ClientBuilder;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Framework\Context;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
-use Shopware\Core\System\SystemConfig\SystemConfigService;
-use Ginger\EmsPay\Service\Helper;
+
 /**
  * @RouteScope(scopes={"storefront"})
  */
@@ -18,22 +18,11 @@ use Ginger\EmsPay\Service\Helper;
 class Webhook extends AbstractController
 {
     /**
-     * @var Helper
-     */
-
-    private $helper;
-
-    /**
      * @var ApiClient
      */
 
     private $ginger;
 
-    /**
-     * @var SystemConfigService
-     */
-
-    private $EmsPayConfig;
 
     /**
      * @var OrderTransactionStateHandler
@@ -44,20 +33,17 @@ class Webhook extends AbstractController
     /**
      * Webhook constructor.
      * @param OrderTransactionStateHandler $transactionStateHandler
-     * @param SystemConfigService $systemConfigService
-     * @param Helper $helper
+     * @param ClientBuilder $clientBuilder
      */
 
-    public function __construct(OrderTransactionStateHandler $transactionStateHandler, SystemConfigService $systemConfigService, Helper $helper)
+    public function __construct(OrderTransactionStateHandler $transactionStateHandler, ClientBuilder $clientBuilder)
     {
         $this->transactionStateHandler = $transactionStateHandler;
-        $this->EmsPayConfig = $systemConfigService->get('EmsPay.config');
-        $this->helper = $helper;
-        $this->ginger = $this->helper->getClient($this->EmsPayConfig);
+        $this->ginger = $clientBuilder->getClient();
     }
 
     /**
-     * @Route("/EmsPay/Webhook", name="frontend.checkout.emspay.webhook", options={"seo"="false"}, methods={"GET"})
+     * @Route("/EmsPay/Webhook", methods={"GET"})
      */
 
     public function webhook(Request $request, Context $context)

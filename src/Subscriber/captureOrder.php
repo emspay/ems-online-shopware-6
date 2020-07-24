@@ -3,18 +3,16 @@
 namespace Ginger\EmsPay\Subscriber;
 
 use Ginger\ApiClient;
-use Ginger\EmsPay\Service\Helper;
+use Ginger\EmsPay\Service\ClientBuilder;
 use PHPUnit\Exception;
 use Shopware\Core\Checkout\Cart\Exception\OrderDeliveryNotFoundException;
 use Shopware\Core\Checkout\Cart\Exception\OrderNotFoundException;
 use Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\System\StateMachine\Event\StateMachineStateChangeEvent;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Framework\Context;
-use Shopware\Core\System\SystemConfig\SystemConfigService;
 
 
 class captureOrder
@@ -39,13 +37,11 @@ class captureOrder
     public function __construct(
         EntityRepositoryInterface $orderRepository,
         EntityRepositoryInterface $orderDeliveryRepository,
-        SystemConfigService $systemConfigService,
-        Helper $helper
+        ClientBuilder $clientBuilder
     ) {
         $this->orderRepository = $orderRepository;
         $this->orderDeliveryRepository = $orderDeliveryRepository;
-        $EmsPayConfig = $systemConfigService->get('EmsPay.config');
-        $this->ginger = $helper->getClient($EmsPayConfig);
+        $this->ginger = $clientBuilder->getClient();
     }
 
     /**
