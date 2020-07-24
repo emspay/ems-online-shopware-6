@@ -35,19 +35,13 @@ class captureOrder
      */
     private $orderDeliveryRepository;
 
-    /**
-     * @var EntityRepositoryInterface
-     */
-    private $lightGingerRepository;
 
     public function __construct(
-        EntityRepositoryInterface $lightGingerRepository,
         EntityRepositoryInterface $orderRepository,
         EntityRepositoryInterface $orderDeliveryRepository,
         SystemConfigService $systemConfigService,
         Helper $helper
     ) {
-        $this->lightGingerRepository = $lightGingerRepository;
         $this->orderRepository = $orderRepository;
         $this->orderDeliveryRepository = $orderDeliveryRepository;
         $EmsPayConfig = $systemConfigService->get('EmsPay.config');
@@ -81,7 +75,7 @@ class captureOrder
         $orderId = $orderDelivery->getOrderId();
 
         $order = $this->getOrder($orderId,$context);
-        $ems_order_id = $this->searchGingerOrderId(current($order->getTransactions()->getIds()),$context);
+        $ems_order_id = $order->getCustomFields()['ems_order_id'];
         if (is_null($ems_order_id)) {
             return;
         }
@@ -95,24 +89,6 @@ class captureOrder
             print_r($exception->getMessage());exit;
         }
         }
-
-    /**
-     * Search Ginger order ID in Light Entity Repository
-     *
-     * @param $sw_order_id
-     * @param $context
-     * @return mixed
-     */
-
-    protected function searchGingerOrderId($sw_order_id,$context){
-        $light_entity_search_result = $this->lightGingerRepository->search
-        (
-            (new Criteria())->addFilter(new EqualsFilter('id', $sw_order_id)),
-            $context
-        );
-        $element = current($light_entity_search_result->getElements());
-        return $element ?  $element->getGingerOrderId() : null;
-    }
 
     /**
      * @throws OrderNotFoundException

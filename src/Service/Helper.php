@@ -4,6 +4,8 @@ namespace Ginger\EmsPay\Service;
 
 use Ginger\ApiClient;
 use Ginger\Ginger;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 
 class Helper
 {
@@ -363,21 +365,37 @@ class Helper
         }
 
     /**
-     * Save the Ginger order id into LightEntity for keep link between Shopware 6 order ID and Ginger order ID
+     * Save the Ginger order id into Shopware Order for keep link between Ginger order ID
      *
-     * @param $order_id
+     * @param $payment_method
+     * @param $orderTransactionId
      * @param $ems_order_id
-     * @param $lightGingerRepository
+     * @param $orderRepository
      * @param $context
+     * @return mixed
      */
 
-    public function saveGingerOrderId($payment_method,$order_id,$ems_order_id,$lightGingerRepository,$context){
+    public function saveGingerOrderId($payment_method,$orderTransactionId,$ems_order_id,$orderRepository,$context){
         if (in_array($payment_method,['klarna-pay-later','afterpay']))
-        $lightGingerRepository->upsert([
+
+        //Search the Shopware Order using transaction id.
+        $orderCriteria = new Criteria();
+        $orderCriteria->addFilter(new EqualsFilter('transactions.id', $orderTransactionId));
+        $order = $orderRepository->search($orderCriteria, $context)->first();
+
+        //Update customFields.
+        $order_custom_fields = $order->getCustomFields();
+        $order_custom_fields = array_merge(
+            empty($order_custom_fields) ? [] : $order_custom_fields,
+            ['ems_order_id' => $ems_order_id]
+        );
+
+        //Return updated Shopware order.
+        return $orderRepository->update(
             [
-                'id' => $order_id,
-                'ems_order_id' => $ems_order_id
-            ]
-        ], $context);
+                ['id' => $order->getId(), 'customFields' => $order_custom_fields],
+            ],
+            $context
+        );
     }
 }

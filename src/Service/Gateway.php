@@ -39,7 +39,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
      * @var EntityRepositoryInterface
      */
 
-    private $lightGingerRepository;
+    private $orderRepository;
 
     /**
      * @var mixed
@@ -55,6 +55,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
 
     /**
      * Gateway constructor.
+     * @param EntityRepositoryInterface $orderRepository
      * @param OrderTransactionStateHandler $transactionStateHandler
      * @param SystemConfigService $systemConfigService
      * @param Helper $helper
@@ -62,13 +63,13 @@ class Gateway implements AsynchronousPaymentHandlerInterface
 
     public function __construct
     (
-        EntityRepositoryInterface $lightGingerRepository,
+        EntityRepositoryInterface $orderRepository,
         OrderTransactionStateHandler $transactionStateHandler,
         SystemConfigService $systemConfigService,
         Helper $helper
     )
     {
-        $this->lightGingerRepository = $lightGingerRepository;
+        $this->orderRepository = $orderRepository;
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
         $this->EmsPayConfig = $systemConfigService->get('EmsPay.config');
@@ -126,7 +127,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
                     current($order['transactions'])['payment_method'],
                     $transaction->getOrderTransaction()->getId(),
                     $order['id'],
-                    $this->lightGingerRepository,
+                    $this->orderRepository,
                     $context);
                 $this->transactionStateHandler->paid($transaction->getOrderTransaction()->getId(), $context); break;
             case 'cancelled' : $this->transactionStateHandler->cancel($transaction->getOrderTransaction()->getId(), $context); break;
