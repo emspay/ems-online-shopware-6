@@ -8,9 +8,11 @@ use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityLoadedEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
+use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-class paymentKeeper
+class paymentKeeper implements EventSubscriberInterface
 {
     /**
      * @var array|mixed|null
@@ -46,15 +48,23 @@ class paymentKeeper
         $this->EmsPayConfig = $systemConfigService->get('EmsPay.config');
     }
 
+    public static function getSubscribedEvents(): array
+    {
+        // Return the events to listen to as array like this:  <event to listen to> => <method to execute>
+        return [
+            CheckoutConfirmPageLoadedEvent::class => 'onPaymentMethodConfigure'
+        ];
+    }
+
     /**
      * Function which responsible to subscriber to the salesChannel load event
      *
      * @param EntityLoadedEvent $event
      */
 
-    public function onPaymentMethodConfigure(EntityLoadedEvent $event) {
-        $salesChannelEntity = current($event->getEntities());
-        $payment_methods_ids = $salesChannelEntity->getPaymentMethodIds();
+    public function onPaymentMethodConfigure(CheckoutConfirmPageLoadedEvent $event) {
+        $salesChannel = $event->getSalesChannelContext()->getSalesChannel();
+        $payment_methods_ids = $salesChannel->getPaymentMethodIds();
 
         if (empty($payment_methods_ids)) {
             return;
