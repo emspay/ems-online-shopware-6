@@ -109,6 +109,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
 
     private function processOrder($transaction,$sales_channel_context): array
     {
+        $issuer_id = $sales_channel_context->getPaymentMethod()->getCustomFields()['issuer_id'] ?? null;
         return array_filter([
             'amount' => $this->helper->getAmountInCents($transaction->getOrder()->getAmountTotal()),                                                     // Amount in cents
             'currency' => $sales_channel_context->getCurrency()->getIsoCode(),                                                                           // Currency
@@ -116,7 +117,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             'description' => $this->helper->getOrderDescription($transaction->getOrder()->getOrderNumber(),$sales_channel_context->getSalesChannel()),   // Description
             'customer' => $this->helper->getCustomer($sales_channel_context->getCustomer()),                                                             // Customer information
             'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                          // Order Lines
-            'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(),$this->ginger->getIdealIssuers()),               // Transactions Array
+            'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(), $issuer_id),               // Transactions Array
             'return_url' => $transaction->getReturnUrl(),                                                                                                // Return URL
             'webhook_url' => $this->helper->getWebhookUrl(),                                                                                             // Webhook URL
             'extra' => $this->helper->getExtraArray($transaction->getOrderTransaction()->getId()),                                                       // Extra information

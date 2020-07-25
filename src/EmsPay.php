@@ -26,7 +26,8 @@ class EmsPay extends Plugin
         'klarnapaylater' => 'Klarna Pay Later',
         'klarnapaynow' => 'Klarna Pay Now',
         'paynow' => 'Pay Now',
-        'applepay' => 'Apple Pay'
+        'applepay' => 'Apple Pay',
+        'ideal' => 'iDEAL'
         ];
 
     public function install(InstallContext $context): void
