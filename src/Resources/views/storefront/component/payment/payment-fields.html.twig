@@ -12,4 +12,10 @@
             {% endfor %}
         </select>
     {% endif %}
+    {% if payment.description is same as('emspay_afterpay') %}
+        <div>
+            <label>Please enter your date of birth in the format Year/Month/Day (****/**/**)</label><br>
+            <span>Birthday:</span> <input type='text' value="{{ payment.customFields.emspay_birthday }}" name='emspay_birthday' id='emspay_birthday'>
+        </div>
+    {% endif %}
 {% endblock %}

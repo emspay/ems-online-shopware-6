@@ -25,7 +25,7 @@
             <argument type="service" id="order_delivery.repository"/>
             <tag name="kernel.event_listener" event="state_machine.order_delivery.state_changed" method="onOrderDeliveryStateChange"/>
         </service>
-        <service id="Ginger\EmsPay\Subscriber\idealIssuer">
+        <service id="Ginger\EmsPay\Subscriber\paymentsCustomFields">
             <argument type="service" id="payment_method.repository"/>
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
             <argument type="service" id="Ginger\EmsPay\Service\Helper" />

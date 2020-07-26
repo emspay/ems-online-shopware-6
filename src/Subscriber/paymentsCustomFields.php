@@ -13,7 +13,7 @@ use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\System\SalesChannel\Event\SalesChannelContextSwitchEvent;
 
-class idealIssuer implements EventSubscriberInterface
+class paymentsCustomFields implements EventSubscriberInterface
 {
 
     /**
@@ -56,7 +56,7 @@ class idealIssuer implements EventSubscriberInterface
         // Return the events to listen to as array like this:  <event to listen to> => <method to execute>
         return [
             CheckoutConfirmPageLoadedEvent::class => 'updateIdealIssuers',
-            SalesChannelContextSwitchEvent::class => 'saveIssuerID',
+            SalesChannelContextSwitchEvent::class => 'saveCustomFields',
         ];
     }
 
@@ -65,36 +65,44 @@ class idealIssuer implements EventSubscriberInterface
      */
     public function updateIdealIssuers(CheckoutConfirmPageLoadedEvent $event)
     {
-        $idealGateway = $this->getIdealGateway($event);
+        $idealGateway = $this->getGatewayEntity($event, 'emspay_ideal');
         $customFields = ['issuers' => $this->ginger->getIdealIssuers(), 'issuer_id' => $idealGateway->getCustomFields()['issuer_id']];
-        $this->updateIdealCustomFields($event, $idealGateway->getID(), $customFields);
+        $this->updateCustomFields($event, $idealGateway->getID(), $customFields);
     }
 
     /**
      * @param SalesChannelContextSwitchEvent $event
      */
-    public function saveIssuerID(SalesChannelContextSwitchEvent $event)
+    public function saveCustomFields(SalesChannelContextSwitchEvent $event)
     {
         $requestData = $event->getRequestDataBag()->all();
-        $idealGateway = $this->getIdealGateway($event);
+        $idealGateway = $this->getGatewayEntity($event, 'emspay_ideal');
+        $afterpayGateway = $this->getGatewayEntity($event, 'emspay_afterpay');
 
         if($idealGateway->getID() != $requestData['paymentMethodId']) {
             $customFields = ['issuers' => $idealGateway->getCustomFields()['issuers'], 'issuer_id' => ''];
         } else {
             $customFields = ['issuers' => $idealGateway->getCustomFields()['issuers'], 'issuer_id' => $requestData['emspay_issuer_id']];
         }
+        $this->updateCustomFields($event, $idealGateway->getID(), $customFields);
 
-        $this->updateIdealCustomFields($event, $idealGateway->getID(), $customFields);
+        if($afterpayGateway->getID() != $requestData['paymentMethodId']) {
+            $customFields = ['emspay_birthday' => null];
+        } else {
+            $customFields = ['emspay_birthday' => $requestData['emspay_birthday']];
+        }
+
+        $this->updateCustomFields($event, $afterpayGateway->getID(), $customFields);
     }
 
     /**
      * @param $event
      * @return mixed
      */
-    protected function getIdealGateway($event)
+    protected function getGatewayEntity($event, $gateway_name)
     {
-        $idealGatewayEntyty = $this->paymentMethodRepository->search((new Criteria())->addFilter(new EqualsFilter('description', 'emspay_ideal')), $event->getContext());
-        return current(current($idealGatewayEntyty->getEntities()));
+        $gatewayEntyty = $this->paymentMethodRepository->search((new Criteria())->addFilter(new EqualsFilter('description', $gateway_name)), $event->getContext());
+        return current(current($gatewayEntyty->getEntities()));
     }
 
     /**
@@ -103,7 +111,7 @@ class idealIssuer implements EventSubscriberInterface
      * @param $customFields
      * @return \Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent
      */
-    protected function updateIdealCustomFields($event, $gatewayID, $customFields)
+    protected function updateCustomFields($event, $gatewayID, $customFields)
     {
         return $this->paymentMethodRepository->update([[
             'id' => $gatewayID,
