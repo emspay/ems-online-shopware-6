@@ -35,7 +35,7 @@ class paymentsCustomFields implements EventSubscriberInterface
     private $ginger;
 
     /**
-     * idealIssuer constructor.
+     * paymentsCustomFields constructor.
      * @param EntityRepositoryInterface $paymentMethodRepository
      * @param SystemConfigService $systemConfigService
      * @param Helper $helper

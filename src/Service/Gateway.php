@@ -14,6 +14,10 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 
+
+use Shopware\Storefront\Controller\ErrorController;
+use Ginger\EmsPay\Exception\EmsPluginException;
+
 class Gateway implements AsynchronousPaymentHandlerInterface
 {
 
@@ -35,18 +39,24 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     private $transactionStateHandler;
 
     /**
+     * @var ErrorController
+     */
+    private $errorController;
+
+    /**
      * Gateway constructor.
      * @param OrderTransactionStateHandler $transactionStateHandler
      * @param SystemConfigService $systemConfigService
      * @param Helper $helper
      */
 
-    public function __construct(OrderTransactionStateHandler $transactionStateHandler, SystemConfigService $systemConfigService, Helper $helper)
+    public function __construct(OrderTransactionStateHandler $transactionStateHandler, SystemConfigService $systemConfigService, Helper $helper, ErrorController $errorController)
     {
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
         $EmsPayConfig = $systemConfigService->get('EmsPay.config');
         $this->ginger = $this->helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
+        $this->errorController = $errorController;
     }
 
     /**
@@ -57,18 +67,19 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         RequestDataBag $dataBag,
         SalesChannelContext $salesChannelContext
     ): RedirectResponse {
+
         // Method that sends the return URL to the external gateway and gets a redirect URL back
         try {
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
         } catch (\Exception $e) {
-            $this->helper->saveEMSLog($e->getMessage(), ['FILE' => __FILE__, 'FUNCTION' => __FUNCTION__, 'LINE' => __LINE__]);
-            print_r($e->getMessage()); exit;
+            throw new EmsPluginException($e->getMessage());
             throw new AsyncPaymentProcessException(
                 $transaction->getOrderTransaction()->getId(),
                 'An error occurred during the creating the EMS Online order' . PHP_EOL . $e->getMessage()
             );
         }
+
         // Redirect to external gateway
         return new RedirectResponse(
             isset($order['order_url']) ? $order['order_url'] : current($order['transactions'])['payment_url']
@@ -98,8 +109,8 @@ class Gateway implements AsynchronousPaymentHandlerInterface
                $message ='Error during transaction';
                $message .= isset(current($order['transactions'])['reason']) ? ':'.current($order['transactions'])['reason'].'.' : '.';
                $message .= '<br> Please contact support.';
-            $this->helper->saveEMSLog($message, ['FILE' => __FILE__, 'FUNCTION' => __FUNCTION__, 'LINE' => __LINE__]);
-            print_r($message);exit;
+
+            throw new EmsPluginException($message);
             throw new CustomerCanceledAsyncPaymentException(
                 $transactionId,
                 (current($order['transactions'])['reason'])
