@@ -13,8 +13,6 @@ use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
-
-
 use Shopware\Storefront\Controller\ErrorController;
 use Ginger\EmsPay\Exception\EmsPluginException;
 
@@ -72,6 +70,10 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         try {
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
+
+            if($order['status'] == 'error') {
+                throw new EmsPluginException(current($order['transactions'])['reason']);
+            }
         } catch (\Exception $e) {
             throw new EmsPluginException($e->getMessage());
             throw new AsyncPaymentProcessException(

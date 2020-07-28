@@ -1,3 +1,5 @@
 {% sw_extends '@Storefront/storefront/page/error/_page.html.twig' %}
 
-{% block base_content %}{{ page.arguments.exception.message }}{% endblock %}
+{% block base_content %}
+    <H4>{{ page.arguments.exception.message }}</H4>
+{% endblock %}
