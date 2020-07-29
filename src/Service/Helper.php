@@ -4,6 +4,8 @@ namespace Ginger\EmsPay\Service;
 
 use Ginger\ApiClient;
 use Ginger\Ginger;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 
 class Helper
 {
@@ -61,6 +63,30 @@ class Helper
 
     public function __construct(){
         include (dirname(__FILE__)."/../Vendor/vendor/autoload.php");
+    }
+
+    /**
+     *  Get the Ginger Client using client configuration
+     *
+     * @param object $config
+     * @param null $method
+     * @return ApiClient
+     */
+    public function getClient($config, $method = null)
+    {
+        $method = $this->translatePaymentMethod($method);
+
+        switch ($method) {
+            case 'klarna-pay-later' :
+                $api_key = !empty($config['emsOnlineKlarnaTestApikey']) ? $config['emsOnlineKlarnaTestApikey'] : $config['emsOnlineApikey'];
+                break;
+            case 'afterpay' :
+                $api_key = !empty(['emsOnlineAfterpayTestApikey']) ? $config['emsOnlineAfterpayTestApikey'] : $config['emsOnlineApikey'];
+                break;
+            default :
+                $api_key = $config['emsOnlineApikey'];
+        }
+        return $this->getGignerClinet($api_key,$config['emsOnlineBundleCacert']);
     }
 
     /**
@@ -212,6 +238,15 @@ class Helper
     }
 
     /**
+     * @param $payment
+     * @return mixed
+     */
+
+    private function translatePaymentMethod($payment){
+        return !is_null($payment) ? self::SHOPWARE_TO_EMS_PAYMENTS[explode('emspay_',$payment)[1]] : null;
+    }
+
+    /**
      * Get transactions array which includes required API information
      *
      * @param $payment
@@ -221,7 +256,7 @@ class Helper
 
     public function getTransactions($payment,$issuer){
 
-        $ginger_payment = self::SHOPWARE_TO_EMS_PAYMENTS[explode('emspay_',$payment->getDescription())[1]];
+        $ginger_payment = $this->translatePaymentMethod($payment->getDescription());
 
         return array_filter([
             array_filter([
@@ -317,7 +352,7 @@ class Helper
      */
 
     public function getOrderLines($sales,$order){
-        if (!in_array($sales->getPaymentMethod(),['emspay_klarnapaylater','emspay_afterpay']))
+        if (!in_array($sales->getPaymentMethod()->getDescription(),['emspay_klarnapaylater','emspay_afterpay']))
         {
             return null;
         }
@@ -328,4 +363,37 @@ class Helper
         $order->getShippingCosts()->getUnitPrice() > 0 ? array_push($order_lines,self::getShippingLines($sales,$order)) : null;
         return $order_lines;
         }
+
+    /**
+     * Save the Ginger order id into Shopware Order for keep link between Ginger order ID
+     *
+     * @param $payment_method
+     * @param $orderTransactionId
+     * @param $ems_order_id
+     * @param $orderRepository
+     * @param $context
+     * @return mixed
+     */
+
+    public function saveGingerOrderId($orderTransactionId,$ems_order_id,$orderRepository,$context){
+        //Search the Shopware Order using transaction id.
+        $orderCriteria = new Criteria();
+        $orderCriteria->addFilter(new EqualsFilter('transactions.id', $orderTransactionId));
+        $order = $orderRepository->search($orderCriteria, $context)->first();
+
+        //Update customFields.
+        $order_custom_fields = $order->getCustomFields();
+        $order_custom_fields = array_merge(
+            empty($order_custom_fields) ? [] : $order_custom_fields,
+            ['ems_order_id' => $ems_order_id]
+        );
+
+        //Return updated Shopware order.
+        return $orderRepository->update(
+            [
+                ['id' => $order->getId(), 'customFields' => $order_custom_fields],
+            ],
+            $context
+        );
+    }
 }

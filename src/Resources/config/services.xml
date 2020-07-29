@@ -6,23 +6,33 @@
 
     <services>
         <service id="Ginger\EmsPay\Service\Gateway">
+            <argument type="service" id="order.repository"/>
             <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
-            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <argument type="service" id="emspay.client_builder" />
             <argument type="service" id="Ginger\EmsPay\Service\Helper" />
             <tag name="shopware.payment.method.async" />
         </service>
         <service id="Ginger\EmsPay\Controller\Webhook" public="true">
             <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
-            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
-            <argument type="service" id="Ginger\EmsPay\Service\Helper" />
+            <argument type="service" id="emspay.client_builder" />
         </service>
         <service id="Ginger\EmsPay\Service\Helper">
             <tag name="ginger.service.helper" />
         </service>
         <service id="Ginger\EmsPay\Subscriber\captureOrder">
+            <argument type="service" id="payment_method.repository"/>
             <argument type="service" id="order.repository"/>
             <argument type="service" id="order_delivery.repository"/>
+            <argument type="service" id="emspay.client_builder" />
             <tag name="kernel.event_listener" event="state_machine.order_delivery.state_changed" method="onOrderDeliveryStateChange"/>
+        </service>
+        <service id="Ginger\EmsPay\Subscriber\paymentKeeper">
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <argument type="service" id="payment_method.repository"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
+        <service class="Ginger\EmsPay\Service\ClientBuilder" id="emspay.client_builder">
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
         </service>
     </services>
 </container>
