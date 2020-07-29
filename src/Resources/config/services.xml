@@ -10,6 +10,7 @@
             <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
             <argument type="service" id="emspay.client_builder" />
             <argument type="service" id="Ginger\EmsPay\Service\Helper" />
+            <argument type="service" id="Shopware\Storefront\Controller\ErrorController" />
             <tag name="shopware.payment.method.async" />
         </service>
         <service id="Ginger\EmsPay\Controller\Webhook" public="true">
@@ -18,6 +19,7 @@
         </service>
         <service id="Ginger\EmsPay\Service\Helper">
             <tag name="ginger.service.helper" />
+            <argument type="service" id="Shopware\Core\Framework\Log\LoggerFactory"/>
         </service>
         <service id="Ginger\EmsPay\Subscriber\captureOrder">
             <argument type="service" id="payment_method.repository"/>
@@ -25,6 +27,19 @@
             <argument type="service" id="order_delivery.repository"/>
             <argument type="service" id="emspay.client_builder" />
             <tag name="kernel.event_listener" event="state_machine.order_delivery.state_changed" method="onOrderDeliveryStateChange"/>
+        </service>
+        <service id="Ginger\EmsPay\Subscriber\paymentsCustomFields">
+            <argument type="service" id="payment_method.repository"/>
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <argument type="service" id="Ginger\EmsPay\Service\Helper" />
+            <tag name="kernel.event_subscriber" />
+        </service>
+        <service id="Ginger\EmsPay\Subscriber\emsPluginExeption">
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <argument type="service" id="Ginger\EmsPay\Service\Helper" />
+            <argument type="service" id="Shopware\Storefront\Controller\ErrorController" />
+            <argument type="service" id="Symfony\Component\HttpFoundation\RequestStack" />
+            <tag name="kernel.event_subscriber" />
         </service>
         <service id="Ginger\EmsPay\Subscriber\paymentKeeper">
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />

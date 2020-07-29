@@ -35,6 +35,11 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     private $transactionStateHandler;
 
     /**
+    
+     * @var ErrorController
+     */
+    private $errorController;
+
      * @var EntityRepositoryInterface
      */
 
@@ -52,6 +57,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
 
     private $clientBuilder;
 
+
     /**
      * Gateway constructor.
      * @param EntityRepositoryInterface $orderRepository
@@ -65,12 +71,14 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         EntityRepositoryInterface $orderRepository,
         OrderTransactionStateHandler $transactionStateHandler,
         ClientBuilder $clientBuilder,
-        Helper $helper
+        Helper $helper,
+        ErrorController $errorController
     )
     {
         $this->orderRepository = $orderRepository;
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
+        $this->errorController = $errorController;
         $this->clientBuilder = $clientBuilder;
         $this->use_webhook = $this->clientBuilder->getConfig()['emsOnlineUseWebhook'];
     }
@@ -83,18 +91,21 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         RequestDataBag $dataBag,
         SalesChannelContext $salesChannelContext
     ): RedirectResponse {
+
         // Method that sends the return URL to the external gateway and gets a redirect URL back
         try {
             $this->ginger = $this->clientBuilder->getClient($transaction->getOrderTransaction()->getPaymentMethod()->getDescription());
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
+
+            if($order['status'] == 'error') {
+                $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $salesChannelContext->getContext());
+                throw new EmsPluginException(current($order['transactions'])['reason']);
+            }
         } catch (\Exception $e) {
-            print_r($e->getMessage()); exit;
-            throw new AsyncPaymentProcessException(
-                $transaction->getOrderTransaction()->getId(),
-                'An error occurred during the creating the EMS Online order' . PHP_EOL . $e->getMessage()
-            );
+            throw new EmsPluginException($e->getMessage());
         }
+
         // Redirect to external gateway
         return new RedirectResponse(
             isset($order['order_url']) ? $order['order_url'] : current($order['transactions'])['payment_url']
@@ -129,22 +140,22 @@ class Gateway implements AsynchronousPaymentHandlerInterface
                $message ='Error during transaction';
                $message .= isset(current($order['transactions'])['reason']) ? ':'.current($order['transactions'])['reason'].'.' : '.';
                $message .= '<br> Please contact support.';
-            print_r($message);exit;
-            throw new CustomerCanceledAsyncPaymentException(
-                $transactionId,
-                (current($order['transactions'])['reason'])
-            ); break;
+
+            throw new EmsPluginException($message);
         }
     }
 
     private function processOrder($transaction,$sales_channel_context): array
     {
+        $issuer_id = $sales_channel_context->getPaymentMethod()->getCustomFields()['issuer_id'] ?? null;
         return array_filter([
             'amount' => $this->helper->getAmountInCents($transaction->getOrder()->getAmountTotal()),                                                     // Amount in cents
             'currency' => $sales_channel_context->getCurrency()->getIsoCode(),                                                                           // Currency
             'merchant_order_id' => $transaction->getOrder()->getOrderNumber(),                                                                           // Merchant Order Id
             'description' => $this->helper->getOrderDescription($transaction->getOrder()->getOrderNumber(),$sales_channel_context->getSalesChannel()),   // Description
             'customer' => $this->helper->getCustomer($sales_channel_context->getCustomer()),                                                             // Customer information
+            'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                                              // Order Lines
+            'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(), $issuer_id),                                    // Transactions Array
             'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                                              // Order Lines
             'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(),$this->ginger->getIdealIssuers()),               // Transactions Array
             'return_url' => $transaction->getReturnUrl(),                                                                                                // Return URL

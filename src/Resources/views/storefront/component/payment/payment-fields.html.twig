@@ -1,0 +1,21 @@
+{% sw_extends '@Storefront/storefront/component/payment/payment-fields.html.twig' %}
+{% block component_payment_method_control %}
+    {{ parent() }}
+    {% if payment.description is same as('emspay_ideal') %}
+        <select id="emspay_issuer" name="emspay_issuer_id">
+            <option value="">Choose your bank</option>
+            {% for issuer in payment.customFields.issuers %}
+                <option value="{{issuer.id}}"
+                    {% if payment.customFields.issuer_id is same as(issuer.id) %}selected="selected"{% endif %}>
+                    {{ issuer.name }}
+                </option>
+            {% endfor %}
+        </select>
+    {% endif %}
+    {% if payment.description is same as('emspay_afterpay') %}
+        <div>
+            <label>Please enter your date of birth in the format Year/Month/Day (****/**/**)</label><br>
+            <span>Birthday:</span> <input type='text' value="{{ payment.customFields.emspay_birthday }}" name='emspay_birthday' id='emspay_birthday'>
+        </div>
+    {% endif %}
+{% endblock %}
