@@ -13,7 +13,6 @@ use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Shopware\Core\System\SystemConfig\SystemConfigService;
 
 class Gateway implements AsynchronousPaymentHandlerInterface
 {
@@ -51,13 +50,13 @@ class Gateway implements AsynchronousPaymentHandlerInterface
      * @var
      */
 
-    private $EmsPayConfig;
+    private $clientBuilder;
 
     /**
      * Gateway constructor.
      * @param EntityRepositoryInterface $orderRepository
      * @param OrderTransactionStateHandler $transactionStateHandler
-     * @param SystemConfigService $systemConfigService
+     * @param ClientBuilder $clientBuilder
      * @param Helper $helper
      */
 
@@ -65,15 +64,15 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     (
         EntityRepositoryInterface $orderRepository,
         OrderTransactionStateHandler $transactionStateHandler,
-        SystemConfigService $systemConfigService,
+        ClientBuilder $clientBuilder,
         Helper $helper
     )
     {
         $this->orderRepository = $orderRepository;
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
-        $this->EmsPayConfig = $systemConfigService->get('EmsPay.config');
-        $this->use_webhook = $this->EmsPayConfig['emsOnlineUseWebhook'];
+        $this->clientBuilder = $clientBuilder;
+        $this->use_webhook = $this->clientBuilder->getConfig()['emsOnlineUseWebhook'];
     }
 
     /**
@@ -86,10 +85,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     ): RedirectResponse {
         // Method that sends the return URL to the external gateway and gets a redirect URL back
         try {
-            $this->ginger = $this->helper->getClient(
-                $this->EmsPayConfig,
-                $transaction->getOrderTransaction()->getPaymentMethod()->getDescription()
-            );
+            $this->ginger = $this->clientBuilder->getClient($transaction->getOrderTransaction()->getPaymentMethod()->getDescription());
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
         } catch (\Exception $e) {
@@ -113,10 +109,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         Request $request,
         SalesChannelContext $salesChannelContext
     ): void {
-        $this->ginger = $this->helper->getClient(
-            $this->EmsPayConfig,
-            $salesChannelContext->getPaymentMethod()->getDescription()
-        );
+        $this->ginger = $this->clientBuilder->getClient($salesChannelContext->getPaymentMethod()->getDescription());
         $order = $this->ginger->getOrder($_GET['order_id']);
         $context = $salesChannelContext->getContext();
         $paymentState = $order['status'];
@@ -152,7 +145,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             'merchant_order_id' => $transaction->getOrder()->getOrderNumber(),                                                                           // Merchant Order Id
             'description' => $this->helper->getOrderDescription($transaction->getOrder()->getOrderNumber(),$sales_channel_context->getSalesChannel()),   // Description
             'customer' => $this->helper->getCustomer($sales_channel_context->getCustomer()),                                                             // Customer information
-            'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                          // Order Lines
+            'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                                              // Order Lines
             'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(),$this->ginger->getIdealIssuers()),               // Transactions Array
             'return_url' => $transaction->getReturnUrl(),                                                                                                // Return URL
             'webhook_url' => $this->use_webhook ? $this->helper->getWebhookUrl() : null,                                                                                             // Webhook URL
