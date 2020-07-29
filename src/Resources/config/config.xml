@@ -40,10 +40,10 @@
 
         <input-field>
             <name>emsOnlineKlarnaTestApikey</name>
-            <label>EMS Online Klarna Test API-Key</label>
-            <label lang="de-DE">EMS Online Klarna Test API-Schlüssel</label>
-            <label lang="nl-NL">EMS Online Klarna Test API-sleutel</label>
-            <label lang="fr-FR">EMS Online Klarna Test Clé API</label>
+            <label>EMS Online Klarna Pay Later Test API-Key</label>
+            <label lang="de-DE">EMS Online Klarna Pay Later Test API-Schlüssel</label>
+            <label lang="nl-NL">EMS Online Klarna Pay Later Test API-sleutel</label>
+            <label lang="fr-FR">EMS Online Klarna Pay Later Test Clé API</label>
             <helpText>Enter the API Key of the test webshop here for testing Klarna Pay Later. If you do not offer Klarna Pay Later you can leave this empty.</helpText>
             <helpText lang="de-DE">Geben Sie hier den API-Schlüssel des Test-Webshops ein, um Klarna Pay Later zu testen. Wenn Sie Klarna Pay Later nicht anbieten, können Sie dies leer lassen.</helpText>
             <helpText lang="nl-NL">Voer hier de API Key van de test webshop in om Klarna Pay Later te testen. Als u Klarna Pay Later niet aanbiedt, kunt u dit leeg laten.</helpText>
