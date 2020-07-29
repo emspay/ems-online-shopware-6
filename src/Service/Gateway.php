@@ -8,13 +8,11 @@ use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
 use Shopware\Core\Checkout\Payment\Exception\CustomerCanceledAsyncPaymentException;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Shopware\Core\System\SystemConfig\SystemConfigService;
-use Shopware\Storefront\Controller\ErrorController;
-use Ginger\EmsPay\Exception\EmsPluginException;
 
 class Gateway implements AsynchronousPaymentHandlerInterface
 {
@@ -37,24 +35,52 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     private $transactionStateHandler;
 
     /**
+    
      * @var ErrorController
      */
     private $errorController;
 
+     * @var EntityRepositoryInterface
+     */
+
+    private $orderRepository;
+
+    /**
+     * @var mixed
+     */
+
+    private $use_webhook;
+
+    /**
+     * @var
+     */
+
+    private $clientBuilder;
+
+
     /**
      * Gateway constructor.
+     * @param EntityRepositoryInterface $orderRepository
      * @param OrderTransactionStateHandler $transactionStateHandler
-     * @param SystemConfigService $systemConfigService
+     * @param ClientBuilder $clientBuilder
      * @param Helper $helper
      */
 
-    public function __construct(OrderTransactionStateHandler $transactionStateHandler, SystemConfigService $systemConfigService, Helper $helper, ErrorController $errorController)
+    public function __construct
+    (
+        EntityRepositoryInterface $orderRepository,
+        OrderTransactionStateHandler $transactionStateHandler,
+        ClientBuilder $clientBuilder,
+        Helper $helper,
+        ErrorController $errorController
+    )
     {
+        $this->orderRepository = $orderRepository;
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
-        $EmsPayConfig = $systemConfigService->get('EmsPay.config');
-        $this->ginger = $this->helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
         $this->errorController = $errorController;
+        $this->clientBuilder = $clientBuilder;
+        $this->use_webhook = $this->clientBuilder->getConfig()['emsOnlineUseWebhook'];
     }
 
     /**
@@ -68,6 +94,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
 
         // Method that sends the return URL to the external gateway and gets a redirect URL back
         try {
+            $this->ginger = $this->clientBuilder->getClient($transaction->getOrderTransaction()->getPaymentMethod()->getDescription());
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
 
@@ -93,13 +120,19 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         Request $request,
         SalesChannelContext $salesChannelContext
     ): void {
+        $this->ginger = $this->clientBuilder->getClient($salesChannelContext->getPaymentMethod()->getDescription());
         $order = $this->ginger->getOrder($_GET['order_id']);
         $context = $salesChannelContext->getContext();
-        $transaction->getOrderTransaction()->setCustomFields(['ginger_order_id' => $order['id']]);
         $paymentState = $order['status'];
         if (!($this->helper::SHOPWARE_STATES_TO_GINGER[$transaction->getOrderTransaction()->getStateMachineState()->getTechnicalName()] == $paymentState))
             switch ($paymentState) {
-            case 'completed' : $this->transactionStateHandler->paid($transaction->getOrderTransaction()->getId(), $context); break;
+            case 'completed' :
+                $this->helper->saveGingerOrderId(
+                    $transaction->getOrderTransaction()->getId(),
+                    $order['id'],
+                    $this->orderRepository,
+                    $context);
+                $this->transactionStateHandler->paid($transaction->getOrderTransaction()->getId(), $context); break;
             case 'cancelled' : $this->transactionStateHandler->cancel($transaction->getOrderTransaction()->getId(), $context); break;
             case 'new' : $this->transactionStateHandler->reopen($transaction->getOrderTransaction()->getId(), $context); break;
             case 'processing' : $this->transactionStateHandler->process($transaction->getOrderTransaction()->getId(), $context); break;
@@ -121,10 +154,12 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             'merchant_order_id' => $transaction->getOrder()->getOrderNumber(),                                                                           // Merchant Order Id
             'description' => $this->helper->getOrderDescription($transaction->getOrder()->getOrderNumber(),$sales_channel_context->getSalesChannel()),   // Description
             'customer' => $this->helper->getCustomer($sales_channel_context->getCustomer()),                                                             // Customer information
-            'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                          // Order Lines
-            'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(), $issuer_id),               // Transactions Array
+            'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                                              // Order Lines
+            'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(), $issuer_id),                                    // Transactions Array
+            'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                                              // Order Lines
+            'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(),$this->ginger->getIdealIssuers()),               // Transactions Array
             'return_url' => $transaction->getReturnUrl(),                                                                                                // Return URL
-            'webhook_url' => $this->helper->getWebhookUrl(),                                                                                             // Webhook URL
+            'webhook_url' => $this->use_webhook ? $this->helper->getWebhookUrl() : null,                                                                                             // Webhook URL
             'extra' => $this->helper->getExtraArray($transaction->getOrderTransaction()->getId()),                                                       // Extra information
             'payment_info' => [],                                                                                                                        // Payment info
         ]);
