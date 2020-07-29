@@ -375,9 +375,7 @@ class Helper
      * @return mixed
      */
 
-    public function saveGingerOrderId($payment_method,$orderTransactionId,$ems_order_id,$orderRepository,$context){
-        if (in_array($payment_method,['klarna-pay-later','afterpay']))
-
+    public function saveGingerOrderId($orderTransactionId,$ems_order_id,$orderRepository,$context){
         //Search the Shopware Order using transaction id.
         $orderCriteria = new Criteria();
         $orderCriteria->addFilter(new EqualsFilter('transactions.id', $orderTransactionId));

@@ -8,6 +8,7 @@ use PHPUnit\Exception;
 use Shopware\Core\Checkout\Cart\Exception\OrderDeliveryNotFoundException;
 use Shopware\Core\Checkout\Cart\Exception\OrderNotFoundException;
 use Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryEntity;
+use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\System\StateMachine\Event\StateMachineStateChangeEvent;
@@ -33,12 +34,18 @@ class captureOrder
      */
     private $orderDeliveryRepository;
 
+    /**
+     * @var EntityRepositoryInterface
+     */
+    private $orderPaymentRepository;
 
     public function __construct(
+        EntityRepositoryInterface $orderPaymentRepository,
         EntityRepositoryInterface $orderRepository,
         EntityRepositoryInterface $orderDeliveryRepository,
         ClientBuilder $clientBuilder
     ) {
+        $this->orderPaymentRepository = $orderPaymentRepository;
         $this->orderRepository = $orderRepository;
         $this->orderDeliveryRepository = $orderDeliveryRepository;
         $this->ginger = $clientBuilder->getClient();
@@ -69,12 +76,20 @@ class captureOrder
         }
 
         $orderId = $orderDelivery->getOrderId();
-
         $order = $this->getOrder($orderId,$context);
-        $ems_order_id = $order->getCustomFields()['ems_order_id'];
-        if (is_null($ems_order_id)) {
+        $payment_method_id = current($order->getTransactions()->getPaymentMethodIds());
+        /** @var PaymentMethodEntity|null $payment_methoda **/
+        $payment_method = $this->orderPaymentRepository->search(
+            new Criteria([$payment_method_id]),
+            $context
+        )->first();
+
+        if (!in_array($payment_method->getDescription(),['emspay_klarnapaylater','emspay_afterpay'])) {
             return;
         }
+
+        $ems_order_id = $order->getCustomFields()['ems_order_id'];
+
         try {
             $emsOrder = $this->ginger->getOrder($ems_order_id);
             $transactionId = !empty(current($emsOrder['transactions'])) ? current($emsOrder['transactions'])['id'] : null;

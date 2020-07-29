@@ -124,7 +124,6 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             switch ($paymentState) {
             case 'completed' :
                 $this->helper->saveGingerOrderId(
-                    current($order['transactions'])['payment_method'],
                     $transaction->getOrderTransaction()->getId(),
                     $order['id'],
                     $this->orderRepository,
