@@ -72,14 +72,11 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             $order = $this->ginger->createOrder($pre_order);
 
             if($order['status'] == 'error') {
+                $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $salesChannelContext->getContext());
                 throw new EmsPluginException(current($order['transactions'])['reason']);
             }
         } catch (\Exception $e) {
             throw new EmsPluginException($e->getMessage());
-            throw new AsyncPaymentProcessException(
-                $transaction->getOrderTransaction()->getId(),
-                'An error occurred during the creating the EMS Online order' . PHP_EOL . $e->getMessage()
-            );
         }
 
         // Redirect to external gateway
@@ -96,7 +93,6 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         Request $request,
         SalesChannelContext $salesChannelContext
     ): void {
-        $transactionId = $transaction->getOrderTransaction()->getId();
         $order = $this->ginger->getOrder($_GET['order_id']);
         $context = $salesChannelContext->getContext();
         $transaction->getOrderTransaction()->setCustomFields(['ginger_order_id' => $order['id']]);
@@ -113,10 +109,6 @@ class Gateway implements AsynchronousPaymentHandlerInterface
                $message .= '<br> Please contact support.';
 
             throw new EmsPluginException($message);
-            throw new CustomerCanceledAsyncPaymentException(
-                $transactionId,
-                (current($order['transactions'])['reason'])
-            ); break;
         }
     }
 

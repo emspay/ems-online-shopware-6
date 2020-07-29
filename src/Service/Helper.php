@@ -9,7 +9,6 @@ use Monolog\Processor\WebProcessor;
 
 class Helper
 {
-
     const SHOPWARE_STATES_TO_GINGER =
         [
             'paid' => 'completed',

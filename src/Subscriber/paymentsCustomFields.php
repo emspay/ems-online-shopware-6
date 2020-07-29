@@ -6,6 +6,7 @@ namespace Ginger\EmsPay\Subscriber;
 use Ginger\ApiClient;
 use Ginger\EmsPay\Service\Helper;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
@@ -13,6 +14,7 @@ use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\System\SalesChannel\Event\SalesChannelContextSwitchEvent;
 use Ginger\EmsPay\Exception\EmsPluginException;
+use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 
 class paymentsCustomFields implements EventSubscriberInterface
 {
@@ -64,7 +66,7 @@ class paymentsCustomFields implements EventSubscriberInterface
     /**
      * @param CheckoutConfirmPageLoadedEvent $event
      */
-    public function updateIdealIssuers(CheckoutConfirmPageLoadedEvent $event)
+    public function updateIdealIssuers(CheckoutConfirmPageLoadedEvent $event): void
     {
         $idealGateway = $this->getGatewayEntity($event, 'emspay_ideal');
         $customFields = ['issuers' => $this->ginger->getIdealIssuers(), 'issuer_id' => $idealGateway->getCustomFields()['issuer_id']];
@@ -74,7 +76,7 @@ class paymentsCustomFields implements EventSubscriberInterface
     /**
      * @param SalesChannelContextSwitchEvent $event
      */
-    public function saveCustomFields(SalesChannelContextSwitchEvent $event)
+    public function saveCustomFields(SalesChannelContextSwitchEvent $event): void
     {
         $requestData = $event->getRequestDataBag()->all();
 
@@ -109,10 +111,9 @@ class paymentsCustomFields implements EventSubscriberInterface
      * @param $event
      * @return mixed
      */
-    protected function getGatewayEntity($event, $gateway_name)
+    protected function getGatewayEntity($event, $gateway_name): PaymentMethodEntity
     {
-        $gatewayEntyty = $this->paymentMethodRepository->search((new Criteria())->addFilter(new EqualsFilter('description', $gateway_name)), $event->getContext());
-        return current(current($gatewayEntyty->getEntities()));
+        return $this->paymentMethodRepository->search((new Criteria())->addFilter(new EqualsFilter('description', $gateway_name)), $event->getContext())->first();
     }
 
     /**
@@ -121,12 +122,11 @@ class paymentsCustomFields implements EventSubscriberInterface
      * @param $customFields
      * @return \Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent
      */
-    protected function updateCustomFields($event, $gatewayID, $customFields)
+    protected function updateCustomFields($event, $gatewayID, $customFields): EntityWrittenContainerEvent
     {
         return $this->paymentMethodRepository->update([[
             'id' => $gatewayID,
             'customFields' => $customFields
-
         ]], $event->getContext());
     }
 }
