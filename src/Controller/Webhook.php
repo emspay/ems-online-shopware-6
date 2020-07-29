@@ -3,19 +3,20 @@
 namespace Ginger\EmsPay\Controller;
 
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
+use Shopware\Storefront\Controller\StorefrontController;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Ginger\ApiClient;
 use Ginger\EmsPay\Service\ClientBuilder;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Framework\Context;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @RouteScope(scopes={"storefront"})
  */
 
-class Webhook extends AbstractController
+class Webhook extends StorefrontController
 {
     /**
      * @var ApiClient
@@ -69,5 +70,6 @@ class Webhook extends AbstractController
                 case 'error' : $this->transactionStateHandler->fail($shopware_order_id, $context); break;
                 case 'processing' : $this->transactionStateHandler->process($shopware_order_id, $context); break;
             }
+    return new Response('Webhook successful processed',200,[]);
     }
 }
