@@ -3,6 +3,7 @@
 namespace Ginger\EmsPay\Subscriber;
 
 use Ginger\ApiClient;
+use Ginger\EmsPay\Service\ClientBuilder;
 use Ginger\EmsPay\Service\Helper;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -43,11 +44,10 @@ class emsPluginExeption implements EventSubscriberInterface
      * @param SystemConfigService $systemConfigService
      * @param Helper $helper
      */
-    public function __construct(SystemConfigService $systemConfigService, Helper $helper, ErrorController $errorController, RequestStack $requestStack)
+    public function __construct(ClientBuilder $clientBuilder,Helper $helper, ErrorController $errorController, RequestStack $requestStack)
     {
         $this->helper = $helper;
-        $EmsPayConfig = $systemConfigService->get('EmsPay.config');
-        $this->ginger = $this->helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
+        $this->ginger = $clientBuilder->getClient();
         $this->errorController = $errorController;
         $this->requestStack = $requestStack;
     }

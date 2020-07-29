@@ -2,8 +2,6 @@
 
 namespace Ginger\EmsPay\Service;
 
-use Ginger\ApiClient;
-use Ginger\Ginger;
 use Shopware\Core\Framework\Log\LoggerFactory;
 use Monolog\Processor\WebProcessor;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -53,12 +51,6 @@ class Helper
     const DEFAULT_CURRENCY = 'EUR';
 
     /**
-     *  Default Ginger endpoint
-     */
-
-    const GINGER_ENDPOINT = 'https://api.online.emspay.eu';
-
-    /**
      * Constructor of the class which includes ginger-php autoload
      */
 
@@ -68,59 +60,7 @@ class Helper
     private $loggerFactory;
 
     public function __construct(LoggerFactory $loggerFactory){
-        include (dirname(__FILE__)."/../Vendor/vendor/autoload.php");
         $this->loggerFactory = $loggerFactory;
-    }
-
-    /**
-     *  Get the Ginger Client using client configuration
-     *
-     * @param object $config
-     * @param null $method
-     * @return ApiClient
-     */
-    public function getClient($config, $method = null)
-    {
-        $method = $this->translatePaymentMethod($method);
-
-        switch ($method) {
-            case 'klarna-pay-later' :
-                $api_key = !empty($config['emsOnlineKlarnaTestApikey']) ? $config['emsOnlineKlarnaTestApikey'] : $config['emsOnlineApikey'];
-                break;
-            case 'afterpay' :
-                $api_key = !empty(['emsOnlineAfterpayTestApikey']) ? $config['emsOnlineAfterpayTestApikey'] : $config['emsOnlineApikey'];
-                break;
-            default :
-                $api_key = $config['emsOnlineApikey'];
-        }
-        return $this->getGignerClinet($api_key,$config['emsOnlineBundleCacert']);
-    }
-
-    /**
-     * create a gigner clinet instance
-     *
-     * @param string $apiKey
-     * @param boolean $useBundle
-     * @return ApiClient
-     */
-    public function getGignerClinet($apiKey, $useBundle = false)
-    {
-        return Ginger::createClient(
-            self::GINGER_ENDPOINT,
-            $apiKey,
-            $useBundle ?
-                [
-                    CURLOPT_CAINFO => self::getCaCertPath()
-                ] : []
-        );
-    }
-
-    /**
-     *  function get Cacert.pem path
-     */
-
-    protected static function getCaCertPath(){
-        return dirname(__FILE__).'/../Vendor/assets/cacert.pem';
     }
 
     /**

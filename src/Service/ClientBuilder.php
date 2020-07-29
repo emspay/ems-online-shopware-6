@@ -2,6 +2,7 @@
 
 namespace Ginger\EmsPay\Service;
 
+use Ginger\EmsPay\Exception\EmsPluginException;
 use Ginger\Ginger;
 use Ginger\ApiClient;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
@@ -32,6 +33,7 @@ class ClientBuilder{
      */
     public function getGignerClinet($apiKey, $useBundle = false)
     {
+        try{
         return Ginger::createClient(
             self::GINGER_ENDPOINT,
             $apiKey,
@@ -40,6 +42,9 @@ class ClientBuilder{
                     CURLOPT_CAINFO => self::getCaCertPath()
                 ] : []
         );
+        } catch (\Exception $exception) {
+            throw new EmsPluginException($exception->getMessage());
+        }
     }
 
     /**

@@ -11,6 +11,7 @@ use Shopware\Core\Checkout\Payment\Exception\CustomerCanceledAsyncPaymentExcepti
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
+use Shopware\Storefront\Controller\ErrorController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -35,11 +36,12 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     private $transactionStateHandler;
 
     /**
-    
+
      * @var ErrorController
      */
     private $errorController;
 
+    /**
      * @var EntityRepositoryInterface
      */
 
@@ -156,8 +158,6 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             'customer' => $this->helper->getCustomer($sales_channel_context->getCustomer()),                                                             // Customer information
             'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                                              // Order Lines
             'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(), $issuer_id),                                    // Transactions Array
-            'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                                              // Order Lines
-            'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(),$this->ginger->getIdealIssuers()),               // Transactions Array
             'return_url' => $transaction->getReturnUrl(),                                                                                                // Return URL
             'webhook_url' => $this->use_webhook ? $this->helper->getWebhookUrl() : null,                                                                                             // Webhook URL
             'extra' => $this->helper->getExtraArray($transaction->getOrderTransaction()->getId()),                                                       // Extra information
