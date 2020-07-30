@@ -70,6 +70,6 @@ class Webhook extends StorefrontController
                 case 'error' : $this->transactionStateHandler->fail($shopware_order_id, $context); break;
                 case 'processing' : $this->transactionStateHandler->process($shopware_order_id, $context); break;
             }
-    return new Response('Webhook successful processed',200,[]);
+        return new Response('Webhook successful processed',200,[]);
     }
 }
