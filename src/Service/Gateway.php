@@ -11,7 +11,6 @@ use Shopware\Core\Checkout\Payment\Exception\CustomerCanceledAsyncPaymentExcepti
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
-use Shopware\Storefront\Controller\ErrorController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 
