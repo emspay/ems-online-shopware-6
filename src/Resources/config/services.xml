@@ -41,7 +41,7 @@
             <tag name="kernel.event_subscriber" />
         </service>
         <service id="Ginger\EmsPay\Subscriber\paymentKeeper">
-            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <argument type="service" id="emspay.client_builder" />
             <argument type="service" id="payment_method.repository"/>
             <tag name="kernel.event_subscriber"/>
         </service>

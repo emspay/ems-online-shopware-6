@@ -7,7 +7,6 @@ use Ginger\EmsPay\Service\ClientBuilder;
 use Ginger\EmsPay\Service\Helper;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Storefront\Controller\ErrorController;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Shopware\Core\PlatformRequest;
@@ -41,10 +40,12 @@ class emsPluginExeption implements EventSubscriberInterface
 
     /**
      * emsPluginExeption constructor.
-     * @param SystemConfigService $systemConfigService
+     * @param ClientBuilder $clientBuilder
      * @param Helper $helper
+     * @param ErrorController $errorController
+     * @param RequestStack $requestStack
      */
-    public function __construct(ClientBuilder $clientBuilder,Helper $helper, ErrorController $errorController, RequestStack $requestStack)
+    public function __construct(ClientBuilder $clientBuilder, Helper $helper, ErrorController $errorController, RequestStack $requestStack)
     {
         $this->helper = $helper;
         $this->ginger = $clientBuilder->getClient();

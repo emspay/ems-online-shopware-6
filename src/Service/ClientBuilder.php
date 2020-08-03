@@ -111,8 +111,15 @@ class ClientBuilder{
         $config = array_fill_keys(self::GINGER_PLUGIN_SETTINGS,null);
         $system_config = $sys->get('EmsPay.config');
         foreach (self::GINGER_PLUGIN_SETTINGS as $key){
-            $config[$key] = isset($system_config[$key]) ? $system_config[$key] : null;
+            $config[$key] = isset($system_config[$key]) ? $system_config[$key] : $this->getDefaultValue($key);
+
         }
         return $config;
+    }
+
+    protected function getDefaultValue($key){
+        $value = null;
+        if ($key == 'emsOnlineAfterPayCountries') $value = 'NL, BE';
+        return $value;
     }
 }

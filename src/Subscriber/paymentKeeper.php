@@ -3,11 +3,10 @@
 
 namespace Ginger\EmsPay\Subscriber;
 
+use Ginger\EmsPay\Service\ClientBuilder;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
-use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityLoadedEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,25 +32,25 @@ class paymentKeeper implements EventSubscriberInterface
     private $request;
 
     /**
-     *
+     * @var string
      */
 
     private $countryIsoCode;
 
     /**
      * paymentKeeper constructor.
-     * @param SystemConfigService $systemConfigService
+     * @param ClientBuilder $clientBuilder
      * @param EntityRepositoryInterface $paymentMethodRepository
      */
 
     public function __construct(
-        SystemConfigService $systemConfigService,
+        ClientBuilder $clientBuilder,
         EntityRepositoryInterface $paymentMethodRepository
     )
     {
         $this->request = Request::createFromGlobals();
         $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->EmsPayConfig = $systemConfigService->get('EmsPay.config');
+        $this->EmsPayConfig = $clientBuilder->getConfig();
     }
 
     public static function getSubscribedEvents(): array
@@ -65,7 +64,7 @@ class paymentKeeper implements EventSubscriberInterface
     /**
      * Function which responsible to subscriber to the salesChannel load event
      *
-     * @param EntityLoadedEvent $event
+     * @param CheckoutConfirmPageLoadedEvent $event
      */
 
     public function onPaymentMethodConfigure(CheckoutConfirmPageLoadedEvent $event) {
@@ -152,6 +151,7 @@ class paymentKeeper implements EventSubscriberInterface
                     break;
             }
             $ip = $this->request->getClientIp();
+            /** @var array $ip_list */
             return !empty(array_filter($ip_list)) ? in_array($ip,$ip_list) : true;
         }
         return true;
