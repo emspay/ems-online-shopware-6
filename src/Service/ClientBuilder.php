@@ -16,12 +16,27 @@ class ClientBuilder{
 
     const GINGER_ENDPOINT = 'https://api.online.emspay.eu';
 
+    /**
+     * Plugin settings using for create order from Ginger API
+     */
+
+    const GINGER_PLUGIN_SETTINGS = [
+        'emsOnlineAfterPayCountries',
+        'emsOnlineAfterpayTestIP',
+        'emsOnlineApikey',
+        'emsOnlineBundleCacert',
+        'emsOnlineKlarnaPayLaterTestIP',
+        'emsOnlineKlarnaTestApikey',
+        'emsOnlineUseWebhook',
+        'emsOnlineAfterpayTestApikey'
+    ];
+
     private $config;
 
     public function __construct(SystemConfigService $config)
     {
-        include (dirname(__FILE__)."/../Vendor/vendor/autoload.php");
-        $this->config = $config->get('EmsPay.config');
+        require_once(dirname(__FILE__)."/../Vendor/vendor/autoload.php");
+        $this->config = $this->setConfig($config);
     }
 
     /**
@@ -65,10 +80,10 @@ class ClientBuilder{
     {
         switch ($method) {
             case 'emspay_klarnapaylater' :
-                $api_key = !empty($this->config['emsOnlineKlarnaTestApikey']) ? $this->config['emsOnlineKlarnaTestApikey'] : $this->config['emsOnlineApikey'];
+                $api_key = !is_null($this->config['emsOnlineKlarnaTestApikey']) ? $this->config['emsOnlineKlarnaTestApikey'] : $this->config['emsOnlineApikey'];
                 break;
             case 'emspay_afterpay' :
-                $api_key = !empty(['emsOnlineAfterpayTestApikey']) ? $this->config['emsOnlineAfterpayTestApikey'] : $this->config['emsOnlineApikey'];
+                $api_key = !is_null($this->config['emsOnlineAfterpayTestApikey']) ? $this->config['emsOnlineAfterpayTestApikey'] : $this->config['emsOnlineApikey'];
                 break;
             default :
                 $api_key = $this->config['emsOnlineApikey'];
@@ -79,9 +94,25 @@ class ClientBuilder{
     /**
      * Get the system configuration of the plugin.
      *
-     * @return SystemConfigService
+     * @return array
      */
     public function getConfig(){
         return $this->config;
+    }
+
+    /**
+     * Get the list of settings from the plugin settings page, and fill which is had the version conflict
+     *
+     * @param $sys
+     * @return array
+     */
+
+    protected function setConfig($sys){
+        $config = array_fill_keys(self::GINGER_PLUGIN_SETTINGS,null);
+        $system_config = $sys->get('EmsPay.config');
+        foreach (self::GINGER_PLUGIN_SETTINGS as $key){
+            $config[$key] = isset($system_config[$key]) ? $system_config[$key] : null;
+        }
+        return $config;
     }
 }

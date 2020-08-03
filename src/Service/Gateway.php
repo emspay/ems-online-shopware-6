@@ -3,6 +3,7 @@
 namespace Ginger\EmsPay\Service;
 
 use Ginger\ApiClient;
+use Ginger\EmsPay\Exception\EmsPluginException;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
@@ -33,12 +34,6 @@ class Gateway implements AsynchronousPaymentHandlerInterface
      * @var OrderTransactionStateHandler
      */
     private $transactionStateHandler;
-
-    /**
-
-     * @var ErrorController
-     */
-    private $errorController;
 
     /**
      * @var EntityRepositoryInterface
@@ -72,14 +67,12 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         EntityRepositoryInterface $orderRepository,
         OrderTransactionStateHandler $transactionStateHandler,
         ClientBuilder $clientBuilder,
-        Helper $helper,
-        ErrorController $errorController
+        Helper $helper
     )
     {
         $this->orderRepository = $orderRepository;
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
-        $this->errorController = $errorController;
         $this->clientBuilder = $clientBuilder;
         $this->use_webhook = $this->clientBuilder->getConfig()['emsOnlineUseWebhook'];
     }
