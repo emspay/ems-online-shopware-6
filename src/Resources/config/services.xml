@@ -30,19 +30,18 @@
         </service>
         <service id="Ginger\EmsPay\Subscriber\paymentsCustomFields">
             <argument type="service" id="payment_method.repository"/>
-            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
-            <argument type="service" id="Ginger\EmsPay\Service\Helper" />
+            <argument type="service" id="emspay.client_builder" />
             <tag name="kernel.event_subscriber" />
         </service>
         <service id="Ginger\EmsPay\Subscriber\emsPluginExeption">
-            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <argument type="service" id="emspay.client_builder" />
             <argument type="service" id="Ginger\EmsPay\Service\Helper" />
             <argument type="service" id="Shopware\Storefront\Controller\ErrorController" />
             <argument type="service" id="Symfony\Component\HttpFoundation\RequestStack" />
             <tag name="kernel.event_subscriber" />
         </service>
         <service id="Ginger\EmsPay\Subscriber\paymentKeeper">
-            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService" />
+            <argument type="service" id="emspay.client_builder" />
             <argument type="service" id="payment_method.repository"/>
             <tag name="kernel.event_subscriber"/>
         </service>

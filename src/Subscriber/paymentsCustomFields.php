@@ -4,12 +4,11 @@
 namespace Ginger\EmsPay\Subscriber;
 
 use Ginger\ApiClient;
-use Ginger\EmsPay\Service\Helper;
+use Ginger\EmsPay\Service\ClientBuilder;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\System\SalesChannel\Event\SalesChannelContextSwitchEvent;
@@ -26,12 +25,6 @@ class paymentsCustomFields implements EventSubscriberInterface
     private $paymentMethodRepository;
 
     /**
-     * @var Helper
-     */
-
-    private $helper;
-
-    /**
      * @var ApiClient
      */
 
@@ -40,15 +33,12 @@ class paymentsCustomFields implements EventSubscriberInterface
     /**
      * paymentsCustomFields constructor.
      * @param EntityRepositoryInterface $paymentMethodRepository
-     * @param SystemConfigService $systemConfigService
-     * @param Helper $helper
+     * @param ClientBuilder $clientBuilder
      */
-    public function __construct(EntityRepositoryInterface $paymentMethodRepository, SystemConfigService $systemConfigService, Helper $helper)
+    public function __construct(EntityRepositoryInterface $paymentMethodRepository, ClientBuilder $clientBuilder)
     {
         $this->paymentMethodRepository = $paymentMethodRepository;
-        $this->helper = $helper;
-        $EmsPayConfig = $systemConfigService->get('EmsPay.config');
-        $this->ginger = $this->helper->getGignerClinet($EmsPayConfig['emsOnlineApikey'], $EmsPayConfig['emsOnlineBundleCacert']);
+        $this->ginger = $clientBuilder->getClient();
     }
 
     /**

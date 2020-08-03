@@ -3,8 +3,8 @@
 namespace Ginger\EmsPay\Subscriber;
 
 use Ginger\ApiClient;
+use Ginger\EmsPay\Exception\EmsPluginException;
 use Ginger\EmsPay\Service\ClientBuilder;
-use PHPUnit\Exception;
 use Shopware\Core\Checkout\Cart\Exception\OrderDeliveryNotFoundException;
 use Shopware\Core\Checkout\Cart\Exception\OrderNotFoundException;
 use Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryEntity;
@@ -96,8 +96,8 @@ class captureOrder
             if (!(current($emsOrder['transactions'])['is_fully_captured']))
             $this->ginger->captureOrderTransaction($ems_order_id,$transactionId);
 
-        } catch (Exception $exception) {
-            print_r($exception->getMessage());exit;
+        } catch (\Exception $exception) {
+            throw new EmsPluginException($exception->getMessage());
         }
         }
 
