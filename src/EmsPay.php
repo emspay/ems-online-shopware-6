@@ -22,12 +22,20 @@ class EmsPay extends Plugin
      */
 
     const GINGER_PAYMENTS_LABELS = [
-        //'emspay_afterpay' => 'Afterpay',
         'klarnapaylater' => 'Klarna Pay Later',
         'klarnapaynow' => 'Klarna Pay Now',
         'paynow' => 'Pay Now',
-        'applepay' => 'Apple Pay'
-        ];
+        'applepay' => 'Apple Pay',
+        'ideal' => 'iDEAL',
+        'afterpay' => 'Afterpay',
+        'amex' => 'American Express',
+        'bancontact' => 'Bancontact',
+        'banktransfer' => 'Bank Transfer',
+        'creditcard' => 'Credit Card',
+        'paypal' => 'PayPal',
+        'payconiq' => 'Payconiq',
+        'tikkiepaymentrequest' => 'Tikkie Payment Request'
+    ];
 
     public function install(InstallContext $context): void
     {
