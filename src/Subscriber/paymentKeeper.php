@@ -33,6 +33,12 @@ class paymentKeeper implements EventSubscriberInterface
     private $request;
 
     /**
+     *
+     */
+
+    private $countryIsoCode;
+
+    /**
      * paymentKeeper constructor.
      * @param SystemConfigService $systemConfigService
      * @param EntityRepositoryInterface $paymentMethodRepository
@@ -69,6 +75,8 @@ class paymentKeeper implements EventSubscriberInterface
         if (empty($payment_methods_ids)) {
             return;
         }
+
+        $this->setCountryIso($event->getPage());
 
         foreach($payment_methods_ids as $key => $value){
             $payment_method = $this->findPaymentMethodRepository($value,$event->getContext());
@@ -108,6 +116,11 @@ class paymentKeeper implements EventSubscriberInterface
         );
     }
 
+    protected function setCountryIso($page)
+    {
+        $this->countryIsoCode = current($page->getCart()->getDeliveries()->getAddresses()->getCountries()->getElements())->getIso();
+    }
+
     /**
      * A function that matches the user's locale matches with the locales specified in the plugin settings for Afterpay payment method.
      *
@@ -116,7 +129,7 @@ class paymentKeeper implements EventSubscriberInterface
 
     protected function checkCountryAviability(){
         $country_list = array_map('trim',explode(',',$this->EmsPayConfig['emsOnlineAfterPayCountries']));
-        return empty($country_list) ? in_array(strtoupper($this->request->getLocale()),$country_list) : true;
+        return empty($country_list) ? in_array($this->countryIsoCode,$country_list) : true;
     }
 
     /**
