@@ -35,7 +35,7 @@ class ClientBuilder{
 
     public function __construct(SystemConfigService $config)
     {
-        require_once(dirname(__FILE__)."/../Vendor/vendor/autoload.php");
+        require_once(dirname(__FILE__)."../../vendor/autoload.php");
         $this->config = $this->setConfig($config);
     }
 
@@ -67,7 +67,7 @@ class ClientBuilder{
      */
 
     protected static function getCaCertPath(){
-        return dirname(__FILE__).'/../Vendor/assets/cacert.pem';
+        return dirname(__FILE__).'../../assets/cacert.pem';
     }
 
     /**

@@ -12,6 +12,9 @@
     "require": {
         "shopware/core": "*"
     },
+    "require-dev": {
+        "gingerpayments/ginger-php": "^2.1"
+    },
     "extra": {
         "shopware-plugin-class": "Ginger\\EmsPay\\EmsPay",
         "label": {
