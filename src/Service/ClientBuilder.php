@@ -33,9 +33,8 @@ class ClientBuilder{
 
     private $config;
 
-    public function __construct(SystemConfigService $config)
-    {
-        require_once(dirname(__FILE__)."../../vendor/autoload.php");
+    public function __construct(SystemConfigService $config){
+        require_once(__DIR__.'/../../vendor/autoload.php');
         $this->config = $this->setConfig($config);
     }
 
@@ -67,7 +66,7 @@ class ClientBuilder{
      */
 
     protected static function getCaCertPath(){
-        return dirname(__FILE__).'../../assets/cacert.pem';
+        return dirname(__DIR__).'/assets/cacert.pem';
     }
 
     /**
@@ -80,10 +79,10 @@ class ClientBuilder{
     {
         switch ($method) {
             case 'emspay_klarnapaylater' :
-                $api_key = !is_null($this->config['emsOnlineKlarnaTestApikey']) ? $this->config['emsOnlineKlarnaTestApikey'] : $this->config['emsOnlineApikey'];
+                $api_key = !empty($this->config['emsOnlineKlarnaTestApikey']) ? $this->config['emsOnlineKlarnaTestApikey'] : $this->config['emsOnlineApikey'];
                 break;
             case 'emspay_afterpay' :
-                $api_key = !is_null($this->config['emsOnlineAfterpayTestApikey']) ? $this->config['emsOnlineAfterpayTestApikey'] : $this->config['emsOnlineApikey'];
+                $api_key = !empty($this->config['emsOnlineAfterpayTestApikey']) ? $this->config['emsOnlineAfterpayTestApikey'] : $this->config['emsOnlineApikey'];
                 break;
             default :
                 $api_key = $this->config['emsOnlineApikey'];
