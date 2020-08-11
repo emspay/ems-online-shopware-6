@@ -16,7 +16,7 @@ Version 1.1.0
 ## Installation
 Manual installation of the Shopware 6 plugin using (s)FTP
 
-1. Unzip your archive with the plugin. Put the 'EmsPay' folder to the directory <i><b>root</b></i>/custom/plugins/. 
+1. Create the 'EmsPay' folder in the directory <i><b>root</b></i>/custom/plugins/. Unzip your archive with the plugin to that folder.
 2. Go to the admin panel, this will be '/admin' in your URL address. 
 3. Open tab Settings>System>Plugins. 
     * In list front of you search "EMS Online".
