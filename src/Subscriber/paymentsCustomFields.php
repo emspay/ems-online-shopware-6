@@ -13,7 +13,6 @@ use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\System\SalesChannel\Event\SalesChannelContextSwitchEvent;
 use Ginger\EmsPay\Exception\EmsPluginException;
-use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 
 class paymentsCustomFields implements EventSubscriberInterface
 {
@@ -59,6 +58,9 @@ class paymentsCustomFields implements EventSubscriberInterface
     public function updateIdealIssuers(CheckoutConfirmPageLoadedEvent $event): void
     {
         $idealGateway = $this->getGatewayEntity($event, 'emspay_ideal');
+        if (is_null($idealGateway)){
+            return;
+        }
         $customFields = ['issuers' => $this->ginger->getIdealIssuers(), 'issuer_id' => $idealGateway->getCustomFields()['issuer_id']];
         $this->updateCustomFields($event, $idealGateway->getID(), $customFields);
     }
@@ -101,7 +103,7 @@ class paymentsCustomFields implements EventSubscriberInterface
      * @param $event
      * @return mixed
      */
-    protected function getGatewayEntity($event, $gateway_name): PaymentMethodEntity
+    protected function getGatewayEntity($event, $gateway_name)
     {
         return $this->paymentMethodRepository->search((new Criteria())->addFilter(new EqualsFilter('description', $gateway_name)), $event->getContext())->first();
     }
