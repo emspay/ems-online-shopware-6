@@ -34,7 +34,7 @@ class ClientBuilder{
     private $config;
 
     public function __construct(SystemConfigService $config){
-        require_once(__DIR__.'/../../vendor/autoload.php');
+        require_once(__DIR__.'/../vendor/autoload.php');
         $this->config = $this->setConfig($config);
     }
 

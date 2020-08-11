@@ -13,7 +13,6 @@ use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\System\SalesChannel\Event\SalesChannelContextSwitchEvent;
 use Ginger\EmsPay\Exception\EmsPluginException;
-use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 
 class paymentsCustomFields implements EventSubscriberInterface
 {
