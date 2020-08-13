@@ -2,11 +2,9 @@
 {% block page_checkout_finish_teaser %}
     {{ parent() }}
     {% if page.order.customFields.ems_order_payment_method_details is defined %}
-        {% block page_checkout_finish_order_title %}
             <div class="card-title">
                 IBAN Information
             </div>
-        {% endblock %}
         <div class="finish-content">
             <p><b>Reference: </b>{{ page.order.customFields.ems_order_payment_method_details.reference }}</p>
             <p><b>Creditor BIC: </b>{{ page.order.customFields.ems_order_payment_method_details.creditor_bic }}</p>
