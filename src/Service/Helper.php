@@ -325,9 +325,32 @@ class Helper
         }
 
     /**
+     *  Save the IBAN information for Bank-Transfer payment metohd
+     * @param $orderTransactionId
+     * @param $payment_method_details
+     * @param $orderRepository
+     * @param $context
+     * @return mixed
+     */
+
+    public function saveIbanInfo($orderTransactionId,$payment_method_details,$orderRepository,$context){
+        //Search the Shopware Order using transaction id.
+        $order = $this->searchShopwareOrder($orderRepository,$orderTransactionId,$context);
+
+        //Update customFields.
+        $order_custom_fields = $order->getCustomFields();
+        $order_custom_fields = array_merge(
+            empty($order_custom_fields) ? [] : $order_custom_fields,
+            ['ems_order_payment_method_details' => $payment_method_details]
+        );
+
+        //Return updated Shopware order.
+        return $this->updateShopwareOrderRepository($orderRepository,$order_custom_fields,$order,$context);
+    }
+
+    /**
      * Save the Ginger order id into Shopware Order for keep link between Ginger order ID
      *
-     * @param $payment_method
      * @param $orderTransactionId
      * @param $ems_order_id
      * @param $orderRepository
@@ -337,9 +360,7 @@ class Helper
 
     public function saveGingerOrderId($orderTransactionId,$ems_order_id,$orderRepository,$context){
         //Search the Shopware Order using transaction id.
-        $orderCriteria = new Criteria();
-        $orderCriteria->addFilter(new EqualsFilter('transactions.id', $orderTransactionId));
-        $order = $orderRepository->search($orderCriteria, $context)->first();
+        $order = $this->searchShopwareOrder($orderRepository,$orderTransactionId,$context);
 
         //Update customFields.
         $order_custom_fields = $order->getCustomFields();
@@ -349,6 +370,33 @@ class Helper
         );
 
         //Return updated Shopware order.
+        return $this->updateShopwareOrderRepository($orderRepository,$order_custom_fields,$order,$context);
+    }
+
+    /**
+     * Searching Shopware Order Repository Entity using transaction id
+     *
+     * @param $orderRepository
+     * @param $orderTransactionId
+     * @param $context
+     * @return mixed
+     */
+    public function searchShopwareOrder($orderRepository,$orderTransactionId,$context){
+        $orderCriteria = new Criteria();
+        $orderCriteria->addFilter(new EqualsFilter('transactions.id', $orderTransactionId));
+        return $orderRepository->search($orderCriteria, $context)->first();
+    }
+
+    /**
+     * Updating Shopware Order Repository Entity custom fields
+     *
+     * @param $orderRepository
+     * @param $order_custom_fields
+     * @param $order
+     * @param $context
+     * @return mixed
+     */
+    public function updateShopwareOrderRepository($orderRepository,$order_custom_fields, $order, $context){
         return $orderRepository->update(
             [
                 ['id' => $order->getId(), 'customFields' => $order_custom_fields],

@@ -14,6 +14,7 @@ use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use function Amp\Iterator\concat;
 
 class Gateway implements AsynchronousPaymentHandlerInterface
 {
@@ -78,7 +79,10 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     }
 
     /**
-     * @throws AsyncPaymentProcessException
+     * @param AsyncPaymentTransactionStruct $transaction
+     * @param RequestDataBag $dataBag
+     * @param SalesChannelContext $salesChannelContext
+     * @return RedirectResponse
      */
     public function pay(
         AsyncPaymentTransactionStruct $transaction,
@@ -92,9 +96,21 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
 
+            /**
+             * Condition if order created with error status
+             */
             if($order['status'] == 'error') {
                 $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $salesChannelContext->getContext());
                 throw new EmsPluginException(current($order['transactions'])['reason']);
+            }
+
+            /**
+             * Redirect for bank-transfer payment method
+             */
+            if (isset($order['transactions']) && current($order['transactions'])['payment_method'] == 'bank-transfer' && current($order['transactions'])['status']){
+                return new RedirectResponse(
+                implode('&',[$order['return_url'],implode('=',['order_id',$order['id']]),implode('=',['project_id',$order['project_id']])])
+                    );
             }
         } catch (\Exception $e) {
             throw new EmsPluginException($e->getMessage());
@@ -107,7 +123,9 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     }
 
     /**
-     * @throws CustomerCanceledAsyncPaymentException
+     * @param AsyncPaymentTransactionStruct $transaction
+     * @param Request $request
+     * @param SalesChannelContext $salesChannelContext
      */
     public function finalize(
         AsyncPaymentTransactionStruct $transaction,
@@ -118,15 +136,26 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         $order = $this->ginger->getOrder($_GET['order_id']);
         $context = $salesChannelContext->getContext();
         $paymentState = $order['status'];
+
+        if (isset($order['transactions']) && current($order['transactions'])['payment_method'] == 'bank-transfer'){
+            $payment_details = current($order['transactions'])['payment_method_details'];
+            $this->helper->saveIbanInfo(
+            $transaction->getOrderTransaction()->getId(),
+            $payment_details,
+            $this->orderRepository,
+            $context
+            );
+        } else
+        $this->helper->saveGingerOrderId(
+            $transaction->getOrderTransaction()->getId(),
+            $order['id'],
+            $this->orderRepository,
+            $context
+        );
+
         if (!($this->helper::SHOPWARE_STATES_TO_GINGER[$transaction->getOrderTransaction()->getStateMachineState()->getTechnicalName()] == $paymentState))
             switch ($paymentState) {
-            case 'completed' :
-                $this->helper->saveGingerOrderId(
-                    $transaction->getOrderTransaction()->getId(),
-                    $order['id'],
-                    $this->orderRepository,
-                    $context);
-                $this->transactionStateHandler->paid($transaction->getOrderTransaction()->getId(), $context); break;
+            case 'completed': $this->transactionStateHandler->paid($transaction->getOrderTransaction()->getId(), $context); break;
             case 'cancelled' : $this->transactionStateHandler->cancel($transaction->getOrderTransaction()->getId(), $context); break;
             case 'new' : $this->transactionStateHandler->reopen($transaction->getOrderTransaction()->getId(), $context); break;
             case 'processing' : $this->transactionStateHandler->process($transaction->getOrderTransaction()->getId(), $context); break;
