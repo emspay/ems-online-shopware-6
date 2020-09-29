@@ -27,7 +27,6 @@ class ClientBuilder{
         'emsOnlineBundleCacert',
         'emsOnlineKlarnaPayLaterTestIP',
         'emsOnlineKlarnaTestApikey',
-        'emsOnlineUseWebhook',
         'emsOnlineAfterpayTestApikey'
     ];
 

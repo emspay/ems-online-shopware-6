@@ -325,30 +325,54 @@ class Helper
         }
 
     /**
-     * Save the Ginger order id into Shopware Order for keep link between Ginger order ID
+     * Save the Additional Order information into Shopware Order for keep some links between Ginger API and Shopware 6
      *
-     * @param $payment_method
      * @param $orderTransactionId
-     * @param $ems_order_id
+     * @param $content
      * @param $orderRepository
      * @param $context
      * @return mixed
      */
 
-    public function saveGingerOrderId($orderTransactionId,$ems_order_id,$orderRepository,$context){
+    public function saveGingerInformation($orderTransactionId,$content,$orderRepository,$context){
         //Search the Shopware Order using transaction id.
-        $orderCriteria = new Criteria();
-        $orderCriteria->addFilter(new EqualsFilter('transactions.id', $orderTransactionId));
-        $order = $orderRepository->search($orderCriteria, $context)->first();
+        $order = $this->searchShopwareOrder($orderRepository,$orderTransactionId,$context);
 
         //Update customFields.
         $order_custom_fields = $order->getCustomFields();
         $order_custom_fields = array_merge(
             empty($order_custom_fields) ? [] : $order_custom_fields,
-            ['ems_order_id' => $ems_order_id]
+            $content
         );
 
         //Return updated Shopware order.
+        return $this->updateShopwareOrderRepository($orderRepository,$order_custom_fields,$order,$context);
+    }
+
+    /**
+     * Searching Shopware Order Repository Entity using transaction id
+     *
+     * @param $orderRepository
+     * @param $orderTransactionId
+     * @param $context
+     * @return mixed
+     */
+    public function searchShopwareOrder($orderRepository,$orderTransactionId,$context){
+        $orderCriteria = new Criteria();
+        $orderCriteria->addFilter(new EqualsFilter('transactions.id', $orderTransactionId));
+        return $orderRepository->search($orderCriteria, $context)->first();
+    }
+
+    /**
+     * Updating Shopware Order Repository Entity custom fields
+     *
+     * @param $orderRepository
+     * @param $order_custom_fields
+     * @param $order
+     * @param $context
+     * @return mixed
+     */
+    public function updateShopwareOrderRepository($orderRepository,$order_custom_fields, $order, $context){
         return $orderRepository->update(
             [
                 ['id' => $order->getId(), 'customFields' => $order_custom_fields],
