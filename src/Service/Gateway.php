@@ -105,9 +105,9 @@ class Gateway implements AsynchronousPaymentHandlerInterface
              * Redirect for bank-transfer payment method
              */
             if (isset($order['transactions']) && current($order['transactions'])['payment_method'] == 'bank-transfer' && current($order['transactions'])['status']){
-                return new RedirectResponse(
-                implode('&',[$order['return_url'],implode('=',['order_id',$order['id']]),implode('=',['project_id',$order['project_id']])])
-                    );
+                $order["return_url"].="&"."order_id=".$order['id'].
+                    "&"."project_id=".$order['project_id'];
+                return new RedirectResponse($order['return_url']);
             }
         } catch (\Exception $e) {
             throw new EmsPluginException($e->getMessage());
@@ -136,16 +136,16 @@ class Gateway implements AsynchronousPaymentHandlerInterface
 
         if (isset($order['transactions']) && current($order['transactions'])['payment_method'] == 'bank-transfer'){
             $payment_details = current($order['transactions'])['payment_method_details'];
-            $this->helper->saveIbanInfo(
+            $this->helper->saveGingerInformation(
             $transaction->getOrderTransaction()->getId(),
-            $payment_details,
+            ['ems_order_payment_method_details' => $payment_details],
             $this->orderRepository,
             $context
             );
         } else
-        $this->helper->saveGingerOrderId(
+        $this->helper->saveGingerInformation(
             $transaction->getOrderTransaction()->getId(),
-            $order['id'],
+            ['ems_order_id' => $order['id']],
             $this->orderRepository,
             $context
         );

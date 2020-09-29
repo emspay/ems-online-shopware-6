@@ -325,40 +325,16 @@ class Helper
         }
 
     /**
-     *  Save the IBAN information for Bank-Transfer payment metohd
-     * @param $orderTransactionId
-     * @param $payment_method_details
-     * @param $orderRepository
-     * @param $context
-     * @return mixed
-     */
-
-    public function saveIbanInfo($orderTransactionId,$payment_method_details,$orderRepository,$context){
-        //Search the Shopware Order using transaction id.
-        $order = $this->searchShopwareOrder($orderRepository,$orderTransactionId,$context);
-
-        //Update customFields.
-        $order_custom_fields = $order->getCustomFields();
-        $order_custom_fields = array_merge(
-            empty($order_custom_fields) ? [] : $order_custom_fields,
-            ['ems_order_payment_method_details' => $payment_method_details]
-        );
-
-        //Return updated Shopware order.
-        return $this->updateShopwareOrderRepository($orderRepository,$order_custom_fields,$order,$context);
-    }
-
-    /**
-     * Save the Ginger order id into Shopware Order for keep link between Ginger order ID
+     * Save the Additional Order information into Shopware Order for keep some links between Ginger API and Shopware 6
      *
      * @param $orderTransactionId
-     * @param $ems_order_id
+     * @param $content
      * @param $orderRepository
      * @param $context
      * @return mixed
      */
 
-    public function saveGingerOrderId($orderTransactionId,$ems_order_id,$orderRepository,$context){
+    public function saveGingerInformation($orderTransactionId,$content,$orderRepository,$context){
         //Search the Shopware Order using transaction id.
         $order = $this->searchShopwareOrder($orderRepository,$orderTransactionId,$context);
 
@@ -366,7 +342,7 @@ class Helper
         $order_custom_fields = $order->getCustomFields();
         $order_custom_fields = array_merge(
             empty($order_custom_fields) ? [] : $order_custom_fields,
-            ['ems_order_id' => $ems_order_id]
+            $content
         );
 
         //Return updated Shopware order.

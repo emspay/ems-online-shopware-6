@@ -6,7 +6,7 @@ By integrating your webshop with EMS Online you can accept payments from your cu
 
 
 ## Version number
-Version 1.1.0
+Version 1.2.0
 
 
 ## Pre-requisites to install the plug-ins: 
