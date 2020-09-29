@@ -40,12 +40,6 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     private $orderRepository;
 
     /**
-     * @var mixed
-     */
-
-    private $use_webhook;
-
-    /**
      * @var
      */
 
