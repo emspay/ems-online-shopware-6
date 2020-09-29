@@ -72,7 +72,6 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
         $this->clientBuilder = $clientBuilder;
-        $this->use_webhook = $this->clientBuilder->getConfig()['emsOnlineUseWebhook'];
     }
 
     /**
@@ -142,7 +141,8 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             $this->orderRepository,
             $context
             );
-        } else
+        }
+
         $this->helper->saveGingerInformation(
             $transaction->getOrderTransaction()->getId(),
             ['ems_order_id' => $order['id']],
@@ -177,7 +177,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                                              // Order Lines
             'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(), $issuer_id),                                    // Transactions Array
             'return_url' => $transaction->getReturnUrl(),                                                                                                // Return URL
-            'webhook_url' => $this->use_webhook ? $this->helper->getWebhookUrl() : null,                                                                                             // Webhook URL
+            'webhook_url' => $this->helper->getWebhookUrl(),                                                                                             // Webhook URL
             'extra' => $this->helper->getExtraArray($transaction->getOrderTransaction()->getId()),                                                       // Extra information
             'payment_info' => [],                                                                                                                        // Payment info
         ]);

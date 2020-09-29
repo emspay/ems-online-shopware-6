@@ -28,16 +28,6 @@
             <helpText lang="fr-FR">Utilisez le bundle cURL CA.</helpText>
         </input-field>
 
-        <input-field type="bool">
-            <name>emsOnlineUseWebhook</name>
-            <label>EMS Online Webhook</label>
-            <disabled>false</disabled>
-            <helpText>Use the webhook.</helpText>
-            <helpText lang="de-DE">Verwenden Sie den Webhook.</helpText>
-            <helpText lang="nl-NL">Gebruik de webhook.</helpText>
-            <helpText lang="fr-FR">Utilisez le webhook.</helpText>
-        </input-field>
-
         <input-field>
             <name>emsOnlineKlarnaTestApikey</name>
             <label>EMS Online Klarna Pay Later Test API-Key</label>

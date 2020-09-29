@@ -22,4 +22,6 @@
 
 1.2.0
 
-Added iBAN information for Bank-Transfer payment method.
+* Added iBAN information for Bank-Transfer payment method.
+* Fixed AfterPay Country Validation. 
+* Removed use webhook option from settings (also from code realization).
