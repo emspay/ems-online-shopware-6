@@ -7,8 +7,6 @@ use Ginger\EmsPay\Exception\EmsPluginException;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
-use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
-use Shopware\Core\Checkout\Payment\Exception\CustomerCanceledAsyncPaymentException;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -42,12 +40,6 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     private $orderRepository;
 
     /**
-     * @var mixed
-     */
-
-    private $use_webhook;
-
-    /**
      * @var
      */
 
@@ -74,11 +66,13 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         $this->transactionStateHandler = $transactionStateHandler;
         $this->helper = $helper;
         $this->clientBuilder = $clientBuilder;
-        $this->use_webhook = $this->clientBuilder->getConfig()['emsOnlineUseWebhook'];
     }
 
     /**
-     * @throws AsyncPaymentProcessException
+     * @param AsyncPaymentTransactionStruct $transaction
+     * @param RequestDataBag $dataBag
+     * @param SalesChannelContext $salesChannelContext
+     * @return RedirectResponse
      */
     public function pay(
         AsyncPaymentTransactionStruct $transaction,
@@ -92,9 +86,21 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             $pre_order = $this->processOrder($transaction,$salesChannelContext);
             $order = $this->ginger->createOrder($pre_order);
 
+            /**
+             * Condition if order created with error status
+             */
             if($order['status'] == 'error') {
                 $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $salesChannelContext->getContext());
                 throw new EmsPluginException(current($order['transactions'])['reason']);
+            }
+
+            /**
+             * Redirect for bank-transfer payment method
+             */
+            if (isset($order['transactions']) && current($order['transactions'])['payment_method'] == 'bank-transfer' && current($order['transactions'])['status']){
+                $order["return_url"].="&"."order_id=".$order['id'].
+                    "&"."project_id=".$order['project_id'];
+                return new RedirectResponse($order['return_url']);
             }
         } catch (\Exception $e) {
             throw new EmsPluginException($e->getMessage());
@@ -107,7 +113,9 @@ class Gateway implements AsynchronousPaymentHandlerInterface
     }
 
     /**
-     * @throws CustomerCanceledAsyncPaymentException
+     * @param AsyncPaymentTransactionStruct $transaction
+     * @param Request $request
+     * @param SalesChannelContext $salesChannelContext
      */
     public function finalize(
         AsyncPaymentTransactionStruct $transaction,
@@ -118,15 +126,27 @@ class Gateway implements AsynchronousPaymentHandlerInterface
         $order = $this->ginger->getOrder($_GET['order_id']);
         $context = $salesChannelContext->getContext();
         $paymentState = $order['status'];
+
+        if (isset($order['transactions']) && current($order['transactions'])['payment_method'] == 'bank-transfer'){
+            $payment_details = current($order['transactions'])['payment_method_details'];
+            $this->helper->saveGingerInformation(
+            $transaction->getOrderTransaction()->getId(),
+            ['ems_order_payment_method_details' => $payment_details],
+            $this->orderRepository,
+            $context
+            );
+        }
+
+        $this->helper->saveGingerInformation(
+            $transaction->getOrderTransaction()->getId(),
+            ['ems_order_id' => $order['id']],
+            $this->orderRepository,
+            $context
+        );
+
         if (!($this->helper::SHOPWARE_STATES_TO_GINGER[$transaction->getOrderTransaction()->getStateMachineState()->getTechnicalName()] == $paymentState))
             switch ($paymentState) {
-            case 'completed' :
-                $this->helper->saveGingerOrderId(
-                    $transaction->getOrderTransaction()->getId(),
-                    $order['id'],
-                    $this->orderRepository,
-                    $context);
-                $this->transactionStateHandler->paid($transaction->getOrderTransaction()->getId(), $context); break;
+            case 'completed': $this->transactionStateHandler->paid($transaction->getOrderTransaction()->getId(), $context); break;
             case 'cancelled' : $this->transactionStateHandler->cancel($transaction->getOrderTransaction()->getId(), $context); break;
             case 'new' : $this->transactionStateHandler->reopen($transaction->getOrderTransaction()->getId(), $context); break;
             case 'processing' : $this->transactionStateHandler->process($transaction->getOrderTransaction()->getId(), $context); break;
@@ -151,7 +171,7 @@ class Gateway implements AsynchronousPaymentHandlerInterface
             'order_lines' => $this->helper->getOrderLines($sales_channel_context,$transaction->getOrder()),                                              // Order Lines
             'transactions' => $this->helper->getTransactions($sales_channel_context->getPaymentMethod(), $issuer_id),                                    // Transactions Array
             'return_url' => $transaction->getReturnUrl(),                                                                                                // Return URL
-            'webhook_url' => $this->use_webhook ? $this->helper->getWebhookUrl() : null,                                                                                             // Webhook URL
+            'webhook_url' => $this->helper->getWebhookUrl(),                                                                                             // Webhook URL
             'extra' => $this->helper->getExtraArray($transaction->getOrderTransaction()->getId()),                                                       // Extra information
             'payment_info' => [],                                                                                                                        // Payment info
         ]);

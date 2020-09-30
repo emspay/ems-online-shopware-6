@@ -127,8 +127,8 @@ class paymentKeeper implements EventSubscriberInterface
      */
 
     protected function checkCountryAviability(){
-        $country_list = array_map('trim',explode(',',$this->EmsPayConfig['emsOnlineAfterPayCountries']));
-        return empty($country_list) ? in_array($this->countryIsoCode,$country_list) : true;
+        $country_list = array_map('trim',array_filter(explode(',',$this->EmsPayConfig['emsOnlineAfterPayCountries'])));
+        return !empty($country_list) ? in_array($this->countryIsoCode,$country_list) : true;
     }
 
     /**
