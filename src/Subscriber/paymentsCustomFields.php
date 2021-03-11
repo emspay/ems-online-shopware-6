@@ -61,7 +61,7 @@ class paymentsCustomFields implements EventSubscriberInterface
         if (is_null($idealGateway)){
             return;
         }
-        $customFields = ['issuers' => $this->ginger->getIdealIssuers(), 'issuer_id' => $idealGateway->getCustomFields()['issuer_id']];
+        $customFields = ['issuers' => $this->ginger->getIdealIssuers(), 'issuer_id' => current($idealGateway->getCustomFields()['issuers'])['id']];
         $this->updateCustomFields($event, $idealGateway->getID(), $customFields);
     }
 
