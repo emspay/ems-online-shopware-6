@@ -25,3 +25,7 @@
 * Added iBAN information for Bank-Transfer payment method.
 * Fixed AfterPay Country Validation. 
 * Removed use webhook option from settings (also from code realization).
+
+1.2.1
+
+* Fixed iDealIssuer issue related to last API update.
