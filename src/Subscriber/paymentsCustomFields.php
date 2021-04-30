@@ -1,10 +1,11 @@
 <?php
 
 
-namespace Ginger\EmsPay\Subscriber;
+namespace GingerPlugin\emspay\Subscriber;
 
 use Ginger\ApiClient;
-use Ginger\EmsPay\Service\ClientBuilder;
+use GingerPlugin\emspay\Service\ClientBuilder;
+use GingerPlugin\emspay\Exception\EmsPluginException;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -12,7 +13,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\System\SalesChannel\Event\SalesChannelContextSwitchEvent;
-use Ginger\EmsPay\Exception\EmsPluginException;
 
 class paymentsCustomFields implements EventSubscriberInterface
 {
@@ -58,10 +58,13 @@ class paymentsCustomFields implements EventSubscriberInterface
     public function updateIdealIssuers(CheckoutConfirmPageLoadedEvent $event): void
     {
         $idealGateway = $this->getGatewayEntity($event, 'emspay_ideal');
+ //       print_r($idealGateway);exit;
         if (is_null($idealGateway)){
             return;
         }
-        $customFields = ['issuers' => $this->ginger->getIdealIssuers(), 'issuer_id' => current($idealGateway->getCustomFields()['issuers'])['id']];
+
+        $issuers = $this->ginger->getIdealIssuers();
+        $customFields = ['issuers' => $issuers, 'issuer_id' => current($issuers)['id']];
         $this->updateCustomFields($event, $idealGateway->getID(), $customFields);
     }
 
@@ -75,7 +78,7 @@ class paymentsCustomFields implements EventSubscriberInterface
         // Update Custom fields for iDEAL
         if( ! empty( $idealGateway = $this->getGatewayEntity($event, 'emspay_ideal') ) ) {
             if($idealGateway->getID() != $requestData['paymentMethodId']) {
-                $customFields = ['issuers' => $idealGateway->getCustomFields()['issuers'], 'issuer_id' => ''];
+                $customFields = ['issuers' => $idealGateway->getCustomFields()['issuers'] ?? null, 'issuer_id' => ''];
             } else {
                 if(! $requestData['emspay_issuer_id']) {
                     throw new EmsPluginException('In order to place an order, you need to select a bank');
@@ -101,11 +104,12 @@ class paymentsCustomFields implements EventSubscriberInterface
 
     /**
      * @param $event
+     * @param $gateway_name
      * @return mixed
      */
     protected function getGatewayEntity($event, $gateway_name)
     {
-        return $this->paymentMethodRepository->search((new Criteria())->addFilter(new EqualsFilter('description', $gateway_name)), $event->getContext())->first();
+        return $this->paymentMethodRepository->search((new Criteria())->addFilter(new EqualsFilter('customFields.payment_name', $gateway_name)), $event->getContext())->first();
     }
 
     /**

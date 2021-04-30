@@ -1,6 +1,6 @@
 <?php
 namespace GingerPlugin\emspay\Exception;
 
-interface EmsExceptionInterface
+interface EmsStorefrontExceptionInterface
 {
 }

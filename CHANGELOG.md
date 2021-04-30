@@ -29,3 +29,9 @@
 1.2.1
 
 * Fixed iDealIssuer issue related to last API update.
+  
+1.3.0
+
+* Updates & fixes based on Shopware 6 guidelines.
+* Added Test API Key button to settings page.
+* Added Afterpay birthday validation.
