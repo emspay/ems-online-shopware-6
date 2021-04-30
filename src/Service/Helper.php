@@ -1,6 +1,6 @@
 <?php
 
-namespace Ginger\EmsPay\Service;
+namespace GingerPlugin\emspay\Service;
 
 use Shopware\Core\Framework\Log\LoggerFactory;
 use Monolog\Processor\WebProcessor;
@@ -15,6 +15,7 @@ class Helper
             'open' => 'new',
             'cancelled' => 'cancelled',
             'processing' => 'processing',
+            'in_progress' => 'processing',
             'pending' => 'pending',
             'failed' => 'error'
         ];
@@ -59,7 +60,8 @@ class Helper
      */
     private $loggerFactory;
 
-    public function __construct(LoggerFactory $loggerFactory){
+    public function __construct(LoggerFactory $loggerFactory)
+    {
         $this->loggerFactory = $loggerFactory;
     }
 
@@ -72,7 +74,7 @@ class Helper
 
     public function getAmountInCents($order_amount)
     {
-        return (int) round ((float) $order_amount * 100);
+        return (int)round((float)$order_amount * 100);
     }
 
     /**
@@ -83,9 +85,10 @@ class Helper
      * @return string
      */
 
-    public function getOrderDescription($number,$sales_channel) {
+    public function getOrderDescription($number, $sales_channel)
+    {
         $message = 'Your order %s at %s';
-        return sprintf($message,(string) $number , $sales_channel->getName());
+        return sprintf($message, (string)$number, $sales_channel->getName());
     }
 
     /**
@@ -95,8 +98,9 @@ class Helper
      * @return string
      */
 
-    protected function getGender($salutation){
-        if ($salutation!="")
+    protected function getGender($salutation)
+    {
+        if ($salutation != "")
             return $salutation == 'mr' ? 'male' : 'female';
         else
             return '';
@@ -109,8 +113,9 @@ class Helper
      * @return mixed|string
      */
 
-    public function getBirthDate($sales){
-        return explode(' ',$sales->getBirthday()->date)[0];
+    public function getBirthDate($sales)
+    {
+        return explode(' ', $sales->getBirthday()->date)[0];
     }
 
     /**
@@ -120,7 +125,8 @@ class Helper
      * @return array
      *
      */
-    public function getCustomer($info_sales_channel){
+    public function getCustomer($info_sales_channel)
+    {
         return array_filter([
             'address_type' => 'customer',
             'gender' => $this->getGender($info_sales_channel->getSalutation()->getSalutationKey()),
@@ -146,7 +152,8 @@ class Helper
      * @return mixed
      */
 
-    protected function getCountryFromAddress($address){
+    protected function getCountryFromAddress($address)
+    {
         return $address->getCountry()->getIso();
     }
 
@@ -157,12 +164,13 @@ class Helper
      * @return array
      */
 
-    protected function getAdditionalAddress($address){
+    protected function getAdditionalAddress($address)
+    {
         return [
             array_filter([
-            'address_type' => 'billing',
-            'address' => $this->getAddress($address),
-            'country' => $this->getCountryFromAddress($address)
+                'address_type' => 'billing',
+                'address' => $this->getAddress($address),
+                'country' => $this->getCountryFromAddress($address)
             ])
         ];
     }
@@ -174,14 +182,15 @@ class Helper
      * @return string
      */
 
-    protected function getAddress($address){
+    protected function getAddress($address)
+    {
         return implode(",", array_filter(array(
-                trim($address->getAdditionalAddressLine1()),
-                trim($address->getAdditionalAddressLine2()),
-                trim($address->getStreet()),
-                trim($address->getZipcode()),
-                trim($address->getCity()),
-            )));
+            trim($address->getAdditionalAddressLine1()),
+            trim($address->getAdditionalAddressLine2()),
+            trim($address->getStreet()),
+            trim($address->getZipcode()),
+            trim($address->getCity()),
+        )));
     }
 
     /**
@@ -189,8 +198,9 @@ class Helper
      * @return mixed
      */
 
-    private function translatePaymentMethod($payment){
-        return !is_null($payment) ? self::SHOPWARE_TO_EMS_PAYMENTS[explode('emspay_',$payment)[1]] : null;
+    private function translatePaymentMethod($payment)
+    {
+        return !is_null($payment) ? self::SHOPWARE_TO_EMS_PAYMENTS[explode('emspay_', $payment)[1]] : null;
     }
 
     /**
@@ -201,9 +211,9 @@ class Helper
      * @return array
      */
 
-    public function getTransactions($payment,$issuer){
-
-        $ginger_payment = $this->translatePaymentMethod($payment->getDescription());
+    public function getTransactions($payment, $issuer)
+    {
+        $ginger_payment = $this->translatePaymentMethod($payment->getCustomFields()['payment_name']);
 
         return array_filter([
             array_filter([
@@ -216,11 +226,13 @@ class Helper
     /**
      * Forming a Webhook url for Ginger Order based on Shopware host and Webhook controller directory
      *
+     * @param $amount
      * @return string
      */
 
-    public function getWebhookUrl(){
-        return implode('',[$_SERVER['HTTP_HOST'],'/EmsPay/Webhook']);
+    public function getWebhookUrl($amount): string
+    {
+        return implode('', [$_SERVER['HTTP_ORIGIN']]);
     }
 
     /**
@@ -231,9 +243,10 @@ class Helper
      * @return array
      */
 
-    public function getExtraArray($id){
+    public function getExtraArray($id)
+    {
         return ['plugin' => sprintf('ShopWare 6 v%s', self::PLUGIN_VERSION),
-                'sw_order_id' => $id];
+            'sw_order_id' => $id];
     }
 
     /**
@@ -243,10 +256,11 @@ class Helper
      * @return int
      */
 
-    protected function calculateTax($taxElements){
+    protected function calculateTax($taxElements)
+    {
         $summ = 0;
         foreach ($taxElements as $tax) {
-            $summ+=$tax->getTax();
+            $summ += $tax->getTax();
         }
         return $summ;
     }
@@ -258,13 +272,14 @@ class Helper
      * @return array
      */
 
-    protected function getProductLines($product){
+    protected function getProductLines($product)
+    {
         return [
             'name' => $product->getLabel(),
             'amount' => self::getAmountInCents($product->getTotalPrice()),
             'quantity' => (int)$product->getQuantity(),
-            'vat_percentage' => (int) self::getAmountInCents(self::calculateTax($product->getPrice()->getCalculatedTaxes()->getElements())),
-            'merchant_order_line_id' => (string) $product->getProductId(),
+            'vat_percentage' => (int)self::getAmountInCents(self::calculateTax($product->getPrice()->getCalculatedTaxes()->getElements())),
+            'merchant_order_line_id' => (string)$product->getProductId(),
             'type' => 'physical',
             'currency' => self::DEFAULT_CURRENCY,
         ];
@@ -278,12 +293,13 @@ class Helper
      * @return array
      */
 
-    protected function getShippingLines($sales,$order){
+    protected function getShippingLines($sales, $order)
+    {
         return [
             'name' => (string)$sales->getShippingMethod()->getName(),
             'amount' => self::getAmountInCents($order->getShippingCosts()->getTotalPrice()),
             'quantity' => $order->getShippingCosts()->getQuantity(),
-            'vat_percentage' => (int) self::getAmountInCents(self::calculateTax($order->getShippingCosts()->getCalculatedTaxes()->getElements())),
+            'vat_percentage' => (int)self::getAmountInCents(self::calculateTax($order->getShippingCosts()->getCalculatedTaxes()->getElements())),
             'merchant_order_line_id' => (string)$sales->getShippingMethod()->getId(),
             'type' => 'shipping_fee',
             'currency' => 'EUR',
@@ -298,16 +314,16 @@ class Helper
      * @return array|null
      */
 
-    public function getOrderLines($sales,$order){
-        if (!in_array($sales->getPaymentMethod()->getDescription(),['emspay_klarnapaylater','emspay_afterpay']))
-        {
+    public function getOrderLines($sales, $order)
+    {
+        if (!in_array($sales->getPaymentMethod()->getCustomFields()['payment_name'], ['emspay_klarnapaylater', 'emspay_afterpay'])) {
             return null;
         }
         $order_lines = [];
-        foreach ($order->getLineItems()->getElements() as $product){
-            array_push($order_lines,self::getProductLines($product));
+        foreach ($order->getLineItems()->getElements() as $product) {
+            array_push($order_lines, self::getProductLines($product));
         }
-        $order->getShippingCosts()->getUnitPrice() > 0 ? array_push($order_lines,self::getShippingLines($sales,$order)) : null;
+        $order->getShippingCosts()->getUnitPrice() > 0 ? array_push($order_lines, self::getShippingLines($sales, $order)) : null;
         return $order_lines;
     }
 
@@ -318,11 +334,12 @@ class Helper
      * @param $msg
      * @param $context
      */
-    public function saveEMSLog($msg, $context) {
+    public function saveEMSLog($msg, $context)
+    {
         $ems_logger = $this->loggerFactory->createRotating('ems_plugin', 7);
         $ems_logger->pushProcessor(new WebProcessor());
         $ems_logger->error($msg, $context);
-        }
+    }
 
     /**
      * Save the Additional Order information into Shopware Order for keep some links between Ginger API and Shopware 6
@@ -334,9 +351,10 @@ class Helper
      * @return mixed
      */
 
-    public function saveGingerInformation($orderTransactionId,$content,$orderRepository,$context){
+    public function saveGingerInformation($orderTransactionId, $content, $orderRepository, $context)
+    {
         //Search the Shopware Order using transaction id.
-        $order = $this->searchShopwareOrder($orderRepository,$orderTransactionId,$context);
+        $order = $this->searchShopwareOrder($orderRepository, $orderTransactionId, $context);
 
         //Update customFields.
         $order_custom_fields = $order->getCustomFields();
@@ -346,7 +364,7 @@ class Helper
         );
 
         //Return updated Shopware order.
-        return $this->updateShopwareOrderRepository($orderRepository,$order_custom_fields,$order,$context);
+        return $this->updateShopwareOrderRepository($orderRepository, $order_custom_fields, $order, $context);
     }
 
     /**
@@ -357,7 +375,8 @@ class Helper
      * @param $context
      * @return mixed
      */
-    public function searchShopwareOrder($orderRepository,$orderTransactionId,$context){
+    public function searchShopwareOrder($orderRepository, $orderTransactionId, $context)
+    {
         $orderCriteria = new Criteria();
         $orderCriteria->addFilter(new EqualsFilter('transactions.id', $orderTransactionId));
         return $orderRepository->search($orderCriteria, $context)->first();
@@ -372,7 +391,8 @@ class Helper
      * @param $context
      * @return mixed
      */
-    public function updateShopwareOrderRepository($orderRepository,$order_custom_fields, $order, $context){
+    public function updateShopwareOrderRepository($orderRepository, $order_custom_fields, $order, $context)
+    {
         return $orderRepository->update(
             [
                 ['id' => $order->getId(), 'customFields' => $order_custom_fields],

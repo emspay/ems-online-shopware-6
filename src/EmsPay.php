@@ -1,9 +1,8 @@
 <?php
 
-namespace Ginger\EmsPay;
+namespace GingerPlugin\emspay;
 
-use Ginger\EmsPay\Service\Gateway;
-
+use GingerPlugin\emspay\Service\emspay_Gateway;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -15,8 +14,9 @@ use Shopware\Core\Framework\Plugin\Context\InstallContext;
 use Shopware\Core\Framework\Plugin\Context\UninstallContext;
 use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
 
-class EmsPay extends Plugin
+class emspay extends Plugin
 {
+    const handler = emspay_Gateway::class;
     /**
      * Payments labels
      */
@@ -77,21 +77,39 @@ class EmsPay extends Plugin
 
         $paymentRepository = $this->container->get('payment_method.repository');
 
-        foreach (self::GINGER_PAYMENTS_LABELS as $key => $value){
-            $this->addGignerPayment($key,$value,$paymentRepository,$pluginId,$context);
+        foreach (self::GINGER_PAYMENTS_LABELS as $key => $value) {
+            $this->addGignerPayment($key, $value, $paymentRepository, $pluginId, $context);
         }
     }
 
-    private function addGignerPayment($name,$label,$paymentRepository,$pluginId,$context)
+    private function addGignerPayment($name, $label, $paymentRepository, $pluginId, $context)
     {
         $payment = [
             // payment handler will be selected by the identifier
-            'handlerIdentifier' => Gateway::class,
-            'name' => implode(' - ',['EMS Online',$label]),
-            'description' => implode('_',['emspay',$name]),
+            'handlerIdentifier' => self::handler,
+            'name' => implode(' - ', ['EMS Online', $label]),
+            'customFields' => ['payment_name' => implode('_', ['emspay', $name])],
+            'description' => 'Pay using ' . $label,
+            'translations' => $this->getTranslations($label, implode('_', ['emspay', $name])),
             'pluginId' => $pluginId,
         ];
         return $paymentRepository->create([$payment], $context);
+    }
+
+    private function getTranslations($payment_name, $payment_code): array
+    {
+        return [
+            'de-DE' => [
+                'name' => implode(' - ', ['EMS Online', $payment_name]),
+                'description' => implode('', ['Bezahlen mit ', $payment_name]),
+                'customFields' => ['payment_name' => $payment_code]
+            ],
+            'en-GB' => [
+                'name' => implode(' - ', ['EMS Online', $payment_name]),
+                'description' => implode('', ['Pay using ', $payment_name]),
+                'customFields' => ['payment_name' => $payment_code]
+            ],
+        ];
     }
 
     private function setPaymentMethodIsActive(bool $active, Context $context): void
@@ -99,34 +117,36 @@ class EmsPay extends Plugin
         /** @var EntityRepositoryInterface $paymentRepository */
         $paymentRepository = $this->container->get('payment_method.repository');
 
-        $paymentMethodId = $this->getPaymentMethodId();
+        $paymentMethodIds = $this->getPaymentMethodId();
 
         // Payment does not even exist, so nothing to (de-)activate here
-        if (!$paymentMethodId) {
+        if (!$paymentMethodIds) {
             return;
         }
 
-        $paymentMethod = [
-            'id' => $paymentMethodId,
-            'active' => $active,
-        ];
-
-        $paymentRepository->update([$paymentMethod], $context);
+        foreach ($paymentMethodIds as $paymentId) {
+            $paymentMethod = [
+                'id' => $paymentId,
+                'active' => $active,
+            ];
+            $paymentRepository->update([$paymentMethod], $context);
+        }
     }
 
-    private function getPaymentMethodId(): ?string
+    private function getPaymentMethodId()
     {
         /** @var EntityRepositoryInterface $paymentRepository */
         $paymentRepository = $this->container->get('payment_method.repository');
 
         // Fetch ID for update
-        $paymentCriteria = (new Criteria())->addFilter(new EqualsFilter('handlerIdentifier', ExamplePayment::class));
+        $paymentCriteria = (new Criteria())->addFilter(new EqualsFilter('handlerIdentifier', self::handler));
+
         $paymentIds = $paymentRepository->searchIds($paymentCriteria, Context::createDefaultContext());
 
         if ($paymentIds->getTotal() === 0) {
             return null;
         }
 
-        return $paymentIds->getIds()[0];
+        return $paymentIds->getIds();
     }
 }

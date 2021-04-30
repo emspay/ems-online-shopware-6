@@ -1,0 +1,18 @@
+{% sw_extends '@Storefront/storefront/page/checkout/finish/finish-details.html.twig' %}
+{% block page_checkout_finish_teaser %}
+    {{ parent() }}
+    {% if page.order.customFields.ems_order_payment_method_details is defined %}
+            <div class="card-title">
+                IBAN Information
+            </div>
+        <div class="finish-content">
+            <p><b>Reference: </b>{{ page.order.customFields.ems_order_payment_method_details.reference }}</p>
+            <p><b>Creditor BIC: </b>{{ page.order.customFields.ems_order_payment_method_details.creditor_bic }}</p>
+            <p><b>Creditor IBAN: </b>{{ page.order.customFields.ems_order_payment_method_details.creditor_iban }}</p>
+            <p><b>Consumer name: </b>{{ page.order.customFields.ems_order_payment_method_details.consumer_name }}</p>
+            <p><b>Creditor account holder city: </b>{{ page.order.customFields.ems_order_payment_method_details.creditor_account_holder_city }}</p>
+            <p><b>Creditor account holder name: </b>{{ page.order.customFields.ems_order_payment_method_details.creditor_account_holder_name }}</p>
+            <p><b>Creditor account holder country: </b>{{ page.order.customFields.ems_order_payment_method_details.creditor_account_holder_country }}</p>
+        </div>
+    {% endif %}
+{% endblock %}
