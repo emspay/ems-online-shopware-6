@@ -1,31 +1,37 @@
 {
     "name": "ginger/emspay_payments",
     "description": "EMS Online payments all-in-one plugin",
-    "version": "v1.2.0",
+    "version": "v1.3.0",
     "type": "shopware-platform-plugin",
-    "license": "MIT",
+    "license": "proprietary",
     "authors": [
         {
             "name": "EMS Online"
         }
     ],
     "require": {
-        "shopware/core": "*"
+        "shopware/core": "*",
+        "shopware/storefront": "^6.1.0"
     },
     "extra": {
-        "shopware-plugin-class": "Ginger\\EmsPay\\EmsPay",
+        "shopware-plugin-class": "GingerPlugin\\emspay\\emspay",
         "label": {
             "de-DE": "EMS Online",
             "en-GB": "EMS Online"
         },
+        "manufacturerLink": {
+            "de-DE": "https://emspay.eu/online-payment-solutions",
+            "en-GB": "https://emspay.eu/online-payment-solutions"
+        },
         "description": {
-            "de-DE": "EMS Online Library",
+            "de-DE": "EMS Online-Bibliothek",
             "en-GB": "EMS Online Library"
         }
     },
     "autoload": {
         "psr-4": {
-            "Ginger\\EmsPay\\": "src/"
+            "GingerPlugin\\emspay\\": "src/",
+            "Ginger\\" : "src/vendor/gingerpayments/ginger-php/src"
         }
     }
 }

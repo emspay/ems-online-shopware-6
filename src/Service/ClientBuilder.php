@@ -1,14 +1,15 @@
 <?php
 
-namespace Ginger\EmsPay\Service;
+namespace GingerPlugin\emspay\Service;
 
-use Ginger\EmsPay\Exception\EmsPluginException;
-use Ginger\Ginger;
 use Ginger\ApiClient;
+use GingerPlugin\emspay\Exception\EmsPluginException;
+use Ginger\Ginger;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 
 
-class ClientBuilder{
+class ClientBuilder
+{
 
     /**
      *  Default Ginger endpoint
@@ -32,40 +33,41 @@ class ClientBuilder{
 
     private $config;
 
-    public function __construct(SystemConfigService $config){
-        require_once(__DIR__.'/../vendor/autoload.php');
+    public function __construct(SystemConfigService $config)
+    {
         $this->config = $this->setConfig($config);
     }
 
     /**
-     * create a gigner clinet instance
+     * Create a Gigner client instance.
      *
      * @param string $apiKey
      * @param boolean $useBundle
      * @return ApiClient
      */
-    public function getGignerClinet($apiKey, $useBundle = false)
+    public function getGignerClinet(string $apiKey, $useBundle = false): ApiClient
     {
-        try{
-        return Ginger::createClient(
-            self::GINGER_ENDPOINT,
-            $apiKey,
-            $useBundle ?
-                [
-                    CURLOPT_CAINFO => self::getCaCertPath()
-                ] : []
-        );
+        try {
+            return Ginger::createClient(
+                self::GINGER_ENDPOINT,
+                $apiKey,
+                $useBundle ?
+                    [
+                        CURLOPT_CAINFO => self::getCaCertPath()
+                    ] : []
+            );
         } catch (\Exception $exception) {
             throw new EmsPluginException($exception->getMessage());
         }
     }
 
     /**
-     *  function get Cacert.pem path
+     *  function get caCert.pem path
      */
 
-    protected static function getCaCertPath(){
-        return dirname(__DIR__).'/assets/cacert.pem';
+    protected static function getCaCertPath()
+    {
+        return dirname(__DIR__) . '/assets/cacert.pem';
     }
 
     /**
@@ -86,7 +88,7 @@ class ClientBuilder{
             default :
                 $api_key = $this->config['emsOnlineApikey'];
         }
-        return $this->getGignerClinet($api_key,$this->config['emsOnlineBundleCacert']);
+        return $this->getGignerClinet($api_key, $this->config['emsOnlineBundleCacert']);
     }
 
     /**
@@ -94,7 +96,8 @@ class ClientBuilder{
      *
      * @return array
      */
-    public function getConfig(){
+    public function getConfig()
+    {
         return $this->config;
     }
 
@@ -105,17 +108,19 @@ class ClientBuilder{
      * @return array
      */
 
-    protected function setConfig($sys){
-        $config = array_fill_keys(self::GINGER_PLUGIN_SETTINGS,null);
-        $system_config = $sys->get('EmsPay.config');
-        foreach (self::GINGER_PLUGIN_SETTINGS as $key){
+    protected function setConfig($sys)
+    {
+        $config = array_fill_keys(self::GINGER_PLUGIN_SETTINGS, null);
+        $system_config = $sys->get('emspay.config');
+        foreach (self::GINGER_PLUGIN_SETTINGS as $key) {
             $config[$key] = isset($system_config[$key]) ? $system_config[$key] : $this->getDefaultValue($key);
 
         }
         return $config;
     }
 
-    protected function getDefaultValue($key){
+    protected function getDefaultValue($key)
+    {
         $value = null;
         if ($key == 'emsOnlineAfterPayCountries') $value = 'NL, BE';
         return $value;

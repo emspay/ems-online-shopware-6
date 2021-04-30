@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Ginger\EmsPay\Exception;
+namespace GingerPlugin\emspay\Exception;
 
-class EmsPluginException extends \RuntimeException implements EmsExceptionInterface
+class EmsPluginException extends \RuntimeException implements EmsStorefrontExceptionInterface
 {
     public function __construct(string $errorMessage)
     {

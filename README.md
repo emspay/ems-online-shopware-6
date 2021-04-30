@@ -6,7 +6,7 @@ By integrating your webshop with EMS Online you can accept payments from your cu
 
 
 ## Version number
-Version 1.2.0
+Version 1.3.0
 
 
 ## Pre-requisites to install the plug-ins: 
@@ -16,7 +16,7 @@ Version 1.2.0
 ## Installation
 Manual installation of the Shopware 6 plugin using (s)FTP
 
-1. Create the 'EmsPay' folder in the directory <i><b>root</b></i>/custom/plugins/. Unzip your archive with the plugin to that folder.
+1. Create the 'emspay' folder in the directory <i><b>root</b></i>/custom/plugins/. Unzip your archive with the plugin to that folder.
 2. Go to the admin panel, this will be '/admin' in your URL address. 
 3. Open tab Settings>System>Plugins. 
     * In list front of you search "EMS Online".
@@ -24,8 +24,7 @@ Manual installation of the Shopware 6 plugin using (s)FTP
     * Click the "Install" Field. 
     * After the installation in the same menu click the "Config" field.  
     * Put you API key in the next opened window.
-    * Choice CaCert option (by default is activated). 
-    * Choice the use webhook option (by default is activated).
+    * Choice CaCert option (by default is activated).
     * Are you offering Klarna on your pay page? In that case enter the following fields:
         * Test API key field. Copy the API Key of your test webshop in the Test API key field. When your Klarna application is approved an extra test webshop was created for you to use in your test with Klarna. The name of this webshop starts with ‘TEST Klarna’.
         * Klarna IP For the payment method Klarna you can choose to offer it only to a limited set of whitelisted IP addresses. You can use this for instance when you are in the testing phase and want to make sure that Klarna is not available yet for your customers. If you do not offer Klarna you can leave the Test API key and Klarna debug IP fields empty.

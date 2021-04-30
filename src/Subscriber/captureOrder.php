@@ -1,10 +1,10 @@
 <?php
 
-namespace Ginger\EmsPay\Subscriber;
+namespace GingerPlugin\emspay\Subscriber;
 
 use Ginger\ApiClient;
-use Ginger\EmsPay\Exception\EmsPluginException;
-use Ginger\EmsPay\Service\ClientBuilder;
+use GingerPlugin\emspay\Exception\EmsPluginException;
+use GingerPlugin\emspay\Service\ClientBuilder;
 use Shopware\Core\Checkout\Cart\Exception\OrderDeliveryNotFoundException;
 use Shopware\Core\Checkout\Cart\Exception\OrderNotFoundException;
 use Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryEntity;
@@ -84,7 +84,7 @@ class captureOrder
             $context
         )->first();
 
-        if (!in_array($payment_method->getDescription(),['emspay_klarnapaylater','emspay_afterpay'])) {
+        if (!in_array($payment_method->getCustomFields()['payment_name'],['emspay_klarnapaylater','emspay_afterpay'])) {
             return;
         }
 

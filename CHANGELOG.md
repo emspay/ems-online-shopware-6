@@ -25,3 +25,10 @@
 * Added iBAN information for Bank-Transfer payment method.
 * Fixed AfterPay Country Validation. 
 * Removed use webhook option from settings (also from code realization).
+ 
+1.3.0
+
+* Fixed iDealIssuer issue related to last API update.
+* Updates & fixes based on Shopware 6 guidelines.
+* Added Test API Key button to settings page.
+* Added Afterpay birthday validation.
