@@ -46,7 +46,7 @@
         const s = Shopware.Classes.ApiService, {Application: i} = Shopware;
 
         class n extends s {
-            constructor(t, e, s = "emspay") {
+            constructor(t, e, s = "ginger") {
                 super(t, e, s)
             }
 
