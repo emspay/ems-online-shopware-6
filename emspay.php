@@ -5,7 +5,6 @@ namespace GingerPlugin;
 use GingerPlugin\Components\BankConfig;
 use GingerPlugin\Components\GingerConfig;
 use GingerPlugin\Components\Redefiner;
-use GingerPlugin\Service\PluginEntryPoint;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
