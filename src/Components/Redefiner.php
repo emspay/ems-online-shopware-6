@@ -1,9 +1,9 @@
 <?php
 namespace GingerPlugin\Components;
 
-use GingerPlugin\Service\ClientBuilder;
+use GingerPlugin\Service\FunctionalityGateway;
 
-class Redefiner extends ClientBuilder
+class Redefiner extends FunctionalityGateway
 {
 
 }
