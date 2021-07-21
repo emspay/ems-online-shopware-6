@@ -3,7 +3,6 @@
 namespace GingerPlugin;
 
 use GingerPlugin\Components\BankConfig;
-use GingerPlugin\Components\GingerConfig;
 use GingerPlugin\Components\Redefiner;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
@@ -60,7 +59,7 @@ class emspay extends Plugin
 
         $paymentRepository = $this->container->get('payment_method.repository');
 
-        foreach (GingerConfig::GINGER_PAYMENTS_LABELS as $key => $value) {
+        foreach (BankConfig::GINGER_PAYMENTS_LABELS as $key => $value) {
             $this->addGignerPayment($key, $value, $paymentRepository, $pluginId, $context);
         }
     }
