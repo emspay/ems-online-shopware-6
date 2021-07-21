@@ -1,7 +1,9 @@
 <?php
 namespace GingerPlugin\Components;
 
-class BankConfig
+use GingerPlugin\Components\GingerConfig;
+
+class BankConfig extends GingerConfig
 {
     const PAYMENT_METHODS_PREFIX = "EMS Online";
     const FILE_PREFIX = "ems_payments";
