@@ -12,10 +12,10 @@
             <label lang="de-DE">EMS Online API-Schlüssel</label>
             <label lang="nl-NL">EMS Online API-sleutel</label>
             <label lang="fr-FR">EMS Online Clé API</label>
-            <helpText>EMS PAY API key is required. Duplicate your ENS PAY API keys from Merchant Portal.</helpText>
-            <helpText lang="de-DE">EMS PAY API Schlüssel ist erforderlich. Duplizieren Sie Ihre ENS PAY API Schlüssel von Merchant Portal.</helpText>
-            <helpText lang="nl-NL">EMS PAY API-sleutel is vereist. Dupliceer uw ENS PAY API-sleutels van Merchant Portal.</helpText>
-            <helpText lang="fr-FR">La clé API EMS PAY est requise. Dupliquez vos clés API ENS PAY à partir du portail marchand.</helpText>
+            <helpText>EMS PAY API key is required. Duplicate your EMS PAY API keys from Merchant Portal.</helpText>
+            <helpText lang="de-DE">EMS PAY API Schlüssel ist erforderlich. Duplizieren Sie Ihre EMS PAY API Schlüssel von Merchant Portal.</helpText>
+            <helpText lang="nl-NL">EMS PAY API-sleutel is vereist. Dupliceer uw EMS PAY API-sleutels van Merchant Portal.</helpText>
+            <helpText lang="fr-FR">La clé API EMS PAY est requise. Dupliquez vos clés API EMS PAY à partir du portail marchand.</helpText>
         </input-field>
         <input-field type="bool">
             <name>GingerBundleCacert</name>

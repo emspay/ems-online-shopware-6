@@ -45,13 +45,6 @@ class emspay extends Plugin
 
     private function addPaymentMethod(Context $context): void
     {
-        $paymentMethodExists = $this->getPaymentMethodId();
-
-        // Payment method exists already, no need to continue here
-        if ($paymentMethodExists) {
-            return;
-        }
-
         /** @var PluginIdProvider $pluginIdProvider */
         $pluginIdProvider = $this->container->get(PluginIdProvider::class);
         $pluginId = $pluginIdProvider->getPluginIdByBaseClass(\get_class($this), $context);
@@ -66,6 +59,16 @@ class emspay extends Plugin
 
     private function addGignerPayment($name, $label, $paymentRepository, $pluginId, $context)
     {
+        $criteria = (new Criteria())
+            ->setLimit(1)
+            ->addFilter(new EqualsFilter('name', $name));
+
+        $ids = $paymentRepository->searchIds($criteria, $context);
+
+        if ($ids->firstId()) {
+            return;
+        }
+
         $payment = [
             // payment handler will be selected by the identifier
             'handlerIdentifier' => self::GATEWAY_HANDLER,
