@@ -56,9 +56,6 @@ class CustomException implements EventSubscriberInterface
 
         if ($event->getThrowable() instanceof CustomStorefrontExceptionInterface) {
             $this->saveToBacklog($exception->getMessage(), ['FILE' => $exception->getFile(), 'FUNCTION' => $exception->getTrace()[0]['function'], 'LINE' => $exception->getLine()]);
-            return new RedirectResponse(
-                $_SERVER['HTTP_HOST'].'/checkout'
-            );
             $event->setResponse((new ErrorResponseFactory())->getResponseFromException($exception, true));
         }
 

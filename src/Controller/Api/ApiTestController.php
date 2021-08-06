@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class ApiTestController
 {
-    private $redefiner;
+    private $client;
 
     public function __construct(Redefiner $redefiner)
     {

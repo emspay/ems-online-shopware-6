@@ -16,6 +16,7 @@ use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentFinalizeException;
 
 class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHandlerInterface
 {
@@ -73,7 +74,7 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
             /**
              * Redirect for bank-transfer payment method
              */
-            if (isset($order['transactions']) && in_array(current($order['transactions'])['payment_method'], BankConfig::GINGER_REQUIRED_IBAN_INFO_PAYMENTS,) && current($order['transactions'])['status']) {
+            if (isset($order['transactions']) && in_array(current($order['transactions'])['payment_method'], BankConfig::GINGER_REQUIRED_IBAN_INFO_PAYMENTS) && current($order['transactions'])['status']) {
                 $order["return_url"] .= "&" . "order_id=" . $order['id'] .
                     "&" . "project_id=" . $order['project_id'];
                 return new RedirectResponse($order['return_url']);
