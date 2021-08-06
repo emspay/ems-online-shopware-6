@@ -1,11 +1,15 @@
-<?php
+<?php declare(strict_types=1);
 
-namespace GingerPlugin\emspay\Controller\Api;
+namespace GingerPlugin\Controller\Api;
 
-use GingerPlugin\emspay\Service\ClientBuilder;
-use Shopware\Core\Framework\Routing\Annotation\RouteScope;
+use GingerPlugin\Components\BankConfig;
+use GingerPlugin\Components\Redefiner;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+
+# don't remove this 2 uses, important for shopware classes!
+use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -13,28 +17,28 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class ApiTestController
 {
-    private $clientBuilder;
+    private $redefiner;
 
-    public function __construct(ClientBuilder $clientBuilder)
+    public function __construct(Redefiner $redefiner)
     {
-        $this->clientBuilder = $clientBuilder;
+        $this->client = $redefiner;
     }
 
     /**
-     * @Route(path="/api/v{version}/_action/emspay/verify")
+     * @Route(path="/api/_action/emspay/verify", methods={"POST"})
      */
     public function check(RequestDataBag $dataBag): JsonResponse
     {
         $success = true;
-
-        if (!$dataBag->has('emspay.config.emsOnlineApikey')) {
+        $key = implode('.',[BankConfig::PLUGIN_TECH_PREFIX,"config","GingerAPIKey"]);
+        if (!$dataBag->has($key)) {
             $success = false;
             return new JsonResponse(['success' => $success]);
         }
 
         try {
-            $apiKey = $dataBag->get('emspay.config.emsOnlineApikey');
-            $ginger_client = $this->clientBuilder->getGignerClinet($apiKey);
+            $apiKey = $dataBag->get($key);
+            $ginger_client = $this->client->getGingerClient($apiKey);
             $ginger_client->getIdealIssuers();
         } catch (\Exception $exception) {
             $success = false;

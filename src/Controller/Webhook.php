@@ -1,49 +1,40 @@
 <?php declare(strict_types=1);
 
-namespace GingerPlugin\emspay\Controller;
+namespace GingerPlugin\Controller;
 
 use Ginger\ApiClient;
-use GingerPlugin\emspay\Service\ClientBuilder;
-use Shopware\Core\Framework\Routing\Annotation\RouteScope;
-use Symfony\Component\Routing\Annotation\Route;
+use GingerPlugin\Components\Redefiner;
 use Shopware\Storefront\Controller\StorefrontController;
 use Symfony\Component\HttpFoundation\Response;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Framework\Context;
 use Symfony\Component\HttpFoundation\Request;
 
+# don't remove this 2 uses, important for shopware classes!
+use Shopware\Core\Framework\Routing\Annotation\RouteScope;
+use Symfony\Component\Routing\Annotation\Route;
+
 /**
  * @RouteScope(scopes={"storefront"})
  */
 class Webhook extends StorefrontController
 {
-    /**
-     * @var ApiClient
-     */
-
-    private $ginger;
-
-
-    /**
-     * @var OrderTransactionStateHandler
-     */
-
     private $transactionStateHandler;
+    private $ginger;
 
     /**
      * Webhook constructor.
      * @param OrderTransactionStateHandler $transactionStateHandler
-     * @param ClientBuilder $clientBuilder
+     * @param Redefiner $redefiner
      */
-
-    public function __construct(OrderTransactionStateHandler $transactionStateHandler, ClientBuilder $clientBuilder)
+    public function __construct(OrderTransactionStateHandler $transactionStateHandler, Redefiner $redefiner)
     {
         $this->transactionStateHandler = $transactionStateHandler;
-        $this->ginger = $clientBuilder->getClient();
+        $this->ginger = $redefiner->getClient();
     }
 
     /**
-     * @Route("/emspay/Webhook", defaults={"csrf_protected"=false}, methods={"POST"})
+     * @Route("/ginger/webhook", defaults={"csrf_protected"=false}, methods={"POST"})
      */
 
     public function webhook(Request $request, Context $context): Response

@@ -1,0 +1,78 @@
+{% sw_extends '@Storefront/storefront/component/payment/payment-method.html.twig' %}
+
+{% block component_payment_method_field %}
+{{ parent() }}
+<style>
+    .custom-ginger-fields {
+        border-left: 3px solid #17a2b8;
+        padding-left: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+    {% if payment.customFields.payment_name is same as('ginger_ideal') %}
+        <div class="custom-ginger-fields">
+        <select id="ginger_issuer" name="ginger_issuer_id">
+            <option value="">Choose your bank</option>
+            {% for issuer in payment.customFields.issuers %}
+                <option value="{{ issuer.id }} ">
+                    {{issuer.name}}
+                </option>
+            {% endfor %}
+        </select>
+        </div>
+    {% endif %}
+    {% if payment.customFields.payment_name is same as('ginger_afterpay') %}
+        <div class="custom-ginger-fields">
+            <label>Please enter your date of birth in the format Year/Month/Day (YYYY/MM/DD)</label><br>
+            <span id="ginger_afterpay_birthday_error_message" style="visibility: hidden; color: red;">The date is invalid, or in invalid format</span><br>
+            <span>Birthday:</span> <input type='text' value="{{ payment.customFields.ginger_afterpay_birthday }}"
+                                          name='ginger_afterpay_birthday' id='ginger_afterpay_birthday'>
+        </div>
+        <div class="custom-ginger-fields">
+            <label>Please enter your phone number if you have not entered it in your online store account.</label><br>
+            <span>Phone number:</span> <input type='text' value="{{ payment.customFields.ginger_afterpay_phone_number }}"
+                                          name='ginger_afterpay_phone_number' id='ginger_afterpay_phone_number'>
+        </div>
+        <script type="text/javascript">
+            let issuer_form = document.getElementById('ginger_issuer');
+            if (issuer_form) {
+                issuer_form.addEventListener('change',function (){
+                    document.getElementById('ginger_issuer_id').value = this.value;
+                });
+            }
+            document.getElementById('ginger_afterpay_phone_number').addEventListener('change',function (){
+               document.getElementById('ginger_afterpay_databagfor_phone_number_place').value = this.value;
+            });
+            document.getElementById('ginger_afterpay_birthday').addEventListener('change', function () {
+                let is_date = this.value.match(/([12]\d{3}\/(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01]))/);
+                if (!is_date) {
+                    document.getElementById('ginger_afterpay_birthday_error_message').style.visibility = "visible";
+                    this.style.borderColor = "red";
+                    set_buttons_disabled_state(true);
+                } else {
+                    document.getElementById('ginger_afterpay_birthday_error_message').style.visibility = "hidden";
+                    this.style.borderColor = 'green';
+                    document.getElementById('ginger_afterpay').value = this.value;
+                    set_buttons_disabled_state(false);
+                }
+            });
+            document.getElementById('confirmPaymentForm').addEventListener('change', function () {
+                let is_checked = document.getElementById('ginger_afterpay_birthday').parentElement.parentElement.querySelector('input[type=radio]:checked');
+                console.log(is_checked);
+                if (is_checked == null) {
+                    set_buttons_disabled_state(false);
+                } else {
+                    let is_date = document.getElementById('ginger_afterpay_birthday').value.match(/([12]\d{3}\/(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01]))/);
+                    is_date ? set_buttons_disabled_state(false) : set_buttons_disabled_state(true);
+                }
+
+            })
+            function set_buttons_disabled_state(state) {
+                let primary_buttons = document.getElementById('confirmPaymentForm').getElementsByClassName("btn-primary");
+                for (let button of primary_buttons) {
+                    button.disabled = state;
+                }
+            }
+        </script>
+    {% endif %}
+{% endblock %}

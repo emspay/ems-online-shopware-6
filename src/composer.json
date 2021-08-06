@@ -1,5 +1,8 @@
 {
     "require": {
         "gingerpayments/ginger-php": "^2.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.3.7"
     }
 }

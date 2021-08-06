@@ -1,11 +1,11 @@
 const { Component, Mixin } = Shopware;
-import template from './emspay-api-test-button.html.twig';
+import template from './ginger-api-test-button.html.twig';
 
-Component.register('emspay-api-test-button', {
+Component.register('ginger-api-test-button', {
     template,
 
     props: ['label'],
-    inject: ['emspayApiTest'],
+    inject: ['gingerApiTest'],
 
     mixins: [
         Mixin.getByName('notification')
@@ -37,17 +37,17 @@ Component.register('emspay-api-test-button', {
 
         check() {
             this.isLoading = true;
-            this.emspayApiTest.check(this.pluginConfig).then((res) => {
+            this.gingerApiTest.check(this.pluginConfig).then((res) => {
                 if (res.success) {
                     this.isSaveSuccessful = true;
                     this.createNotificationSuccess({
-                        title: this.$tc('emspay-api-test-button.title'),
-                        message: this.$tc('emspay-api-test-button.success')
+                        title: this.$tc('ginger-api-test-button.title'),
+                        message: this.$tc('ginger-api-test-button.success')
                     });
                 } else {
                     this.createNotificationError({
-                        title: this.$tc('emspay-api-test-button.title'),
-                        message: this.$tc('emspay-api-test-button.error')
+                        title: this.$tc('ginger-api-test-button.title'),
+                        message: this.$tc('ginger-api-test-button.error')
                     });
                 }
 

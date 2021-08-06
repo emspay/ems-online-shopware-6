@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace GingerPlugin\emspay\Exception;
+namespace GingerPlugin\Exception;
 
 use Shopware\Core\Framework\ShopwareHttpException;
 use Symfony\Component\HttpFoundation\Response;
 
-class emspaySettingsInvalidApiKeyDataException extends ShopwareHttpException implements EmsExceptionInterface
+class SettingsInvalidApiKeyDataException extends ShopwareHttpException implements CustomExceptionInterface
 {
     public function __construct()
     {
@@ -19,6 +19,6 @@ class emspaySettingsInvalidApiKeyDataException extends ShopwareHttpException imp
 
     public function getErrorCode(): string
     {
-        return 'emspay_PAYMENTS_INVALID_API_CREDENTIALS';
+        return 'GINGER_PAYMENTS_INVALID_API_CREDENTIALS';
     }
 }

@@ -1,13 +1,13 @@
 <?php
 
-namespace GingerPlugin\emspay\Service;
+namespace GingerPlugin\Service;
 
-use Shopware\Core\Framework\Log\LoggerFactory;
-use Monolog\Processor\WebProcessor;
+use Ginger\Ginger;
+use GingerPlugin\Components\BankConfig;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 
-class Helper
+class OrderBuilder extends ClientBuilder
 {
     const SHOPWARE_STATES_TO_GINGER =
         [
@@ -21,49 +21,20 @@ class Helper
         ];
 
     /**
-     *  Translator Shopware 6 Payment Description into payment names for Ginger API
+     * Ginger ShopWare 6 plugin version
      */
-    const SHOPWARE_TO_EMS_PAYMENTS =
-        [
-            'applepay' => 'apple-pay',
-            'klarnapaylater' => 'klarna-pay-later',
-            'klarnapaynow' => 'klarna-pay-now',
-            'paynow' => null,
-            'ideal' => 'ideal',
-            'afterpay' => 'afterpay',
-            'amex' => 'amex',
-            'bancontact' => 'bancontact',
-            'banktransfer' => 'bank-transfer',
-            'creditcard' => 'credit-card',
-            'payconiq' => 'payconiq',
-            'paypal' => 'paypal',
-            'tikkiepaymentrequest' => 'tikkie-payment-request',
-            'wechat' => 'wechat',
-        ];
+    const PLUGIN_VERSION = "1.4.0";
 
     /**
-     * EMS Online ShopWare plugin version
+     * Store the current payment method name;
      */
-    const PLUGIN_VERSION = '1.0.0';
+    public $payment_method;
 
     /**
-     * Default currency for Ginger Orders
+     * Store the context in which order builder is called;
+     * @var SalesChannelContext
      */
-    const DEFAULT_CURRENCY = 'EUR';
-
-    /**
-     * Constructor of the class which includes ginger-php autoload
-     */
-
-    /**
-     *  Logger Factory
-     */
-    private $loggerFactory;
-
-    public function __construct(LoggerFactory $loggerFactory)
-    {
-        $this->loggerFactory = $loggerFactory;
-    }
+    public $sales_channel_context;
 
     /**
      * Get amount of the order in cents
@@ -81,14 +52,13 @@ class Helper
      * Get order description for Payment Provider Gateways
      *
      * @param $number
-     * @param $sales_channel
      * @return string
      */
 
-    public function getOrderDescription($number, $sales_channel)
+    public function getOrderDescription($number)
     {
         $message = 'Your order %s at %s';
-        return sprintf($message, (string)$number, $sales_channel->getName());
+        return sprintf($message, (string)$number, $this->sales_channel_context->getSalesChannel()->getName());
     }
 
     /**
@@ -109,13 +79,18 @@ class Helper
     /**
      * Get birth date from Shopware 6 long date format
      *
-     * @param $sales
      * @return mixed|string
      */
 
-    public function getBirthDate($sales)
+    public function getBirthDate($customer)
     {
-        return explode(' ', $sales->getBirthday()->date)[0];
+        if (isset($customer->getBirthday()->date)) {
+            return explode(' ', $customer->getBirthday()->date)[0];
+        } else if ($this->getPaymentName() == 'afterpay') {
+            return str_replace('/', '-', filter_var($_POST['ginger_afterpay'], FILTER_SANITIZE_STRING));
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -125,45 +100,58 @@ class Helper
      * @return array
      *
      */
-    public function getCustomer($info_sales_channel)
+    public function getCustomer($customer)
     {
         return array_filter([
             'address_type' => 'customer',
-            'gender' => $this->getGender($info_sales_channel->getSalutation()->getSalutationKey()),
-            'birthdate' => isset($info_sales_channel->getBirthday()->date) ? self::getBirthDate($info_sales_channel) : null,
-            'country' => $this->getCountryFromAddress($info_sales_channel->getActiveShippingAddress()),
-            'email_address' => $info_sales_channel->getEmail(),
-            'first_name' => $info_sales_channel->getFirstName(),
-            'last_name' => $info_sales_channel->getLastName(),
-            'merchant_customer_id' => (string)$info_sales_channel->getCustomerNumber(),
-            'phone_numbers' => array_filter([$info_sales_channel->getActiveShippingAddress()->getPhoneNumber()]),
-            'address' => $this->getAddress($info_sales_channel->getActiveShippingAddress()),
-            'locale' => $info_sales_channel->getLanguage() == "" ? 'en_GB' : $info_sales_channel->getLanguage(),
-            'ip_address' => $info_sales_channel->getRemoteAddress(),
-            'additional_addresses' => $this->getAdditionalAddress($info_sales_channel->getActiveBillingAddress()),
-            'postal_code' => $info_sales_channel->getActiveShippingAddress()->getZipcode(),
+            'gender' => $this->getGender($customer->getSalutation()->getSalutationKey()),
+            'birthdate' => $this->getBirthDate($customer),
+            'country' => $this->getCountryFromAddress($customer->getActiveShippingAddress()),
+            'email_address' => $customer->getEmail(),
+            'first_name' => $customer->getFirstName(),
+            'last_name' => $customer->getLastName(),
+            'merchant_customer_id' => (string)$customer->getCustomerNumber(),
+            'phone_numbers' => $this->getPhoneNumber($customer),
+            'address' => $this->getAddress($customer->getActiveShippingAddress()),
+            'locale' => $customer->getLanguage() == "" ? 'en_GB' : $customer->getLanguage()->name,
+            'ip_address' => $customer->getRemoteAddress(),
+            'additional_addresses' => $this->getAdditionalAddress($customer->getActiveBillingAddress()),
+            'postal_code' => $customer->getActiveShippingAddress()->getZipcode(),
         ]);
     }
 
     /**
-     * Get country from the address array
+     * Retrieving phone number based on Form or Store data.
+     * Form data has priority in this case because customer can forgot that he fill the phone number in store account.
+     * @param $customer ;
+     */
+    public function getPhoneNumber($customer)
+    {
+        if ($this->getPaymentName() == 'afterpay' && $_POST['ginger_afterpay_databagfor_phone_number_place']) {
+            return array(filter_var($_POST['ginger_afterpay_databagfor_phone_number_place'], FILTER_SANITIZE_STRING));
+
+        } else {
+            return array_filter([$customer->getActiveShippingAddress()->getPhoneNumber()]);
+        }
+    }
+
+    /**
+     * Get country from the customer address array
      *
      * @param $address
      * @return mixed
      */
-
     protected function getCountryFromAddress($address)
     {
         return $address->getCountry()->getIso();
     }
 
     /**
-     * Get the additional address for the order based on billing address
+     * Get the additional address for the order based on customer billing address
      *
      * @param $address
      * @return array
      */
-
     protected function getAdditionalAddress($address)
     {
         return [
@@ -176,12 +164,11 @@ class Helper
     }
 
     /**
-     * Get shipping address as default
+     * Get shipping address from customer information.
      *
      * @param $address
      * @return string
      */
-
     protected function getAddress($address)
     {
         return implode(",", array_filter(array(
@@ -194,31 +181,42 @@ class Helper
     }
 
     /**
-     * @param $payment
+     * @return mixed|null
+     */
+    public function getIssuerId()
+    {
+        if (array_key_exists('issuer_id', $this->sales_channel_context->getPaymentMethod()->getCustomFields()) &&
+            $this->sales_channel_context->getPaymentMethod()->getCustomFields()['issuer_id']) {
+            return $this->sales_channel_context->getPaymentMethod()->getCustomFields()['issuer_id'];
+        } else if (isset($_POST['ginger_issuer_id'])) {
+            return filter_var($_POST['ginger_issuer_id'], FILTER_SANITIZE_STRING);
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * @return mixed
      */
 
-    private function translatePaymentMethod($payment)
+    public function translatePaymentMethod()
     {
-        return !is_null($payment) ? self::SHOPWARE_TO_EMS_PAYMENTS[explode('emspay_', $payment)[1]] : null;
+        return !is_null($this->getPaymentName()) ? BankConfig::SHOPWARE_TO_BANK_PAYMENTS[$this->getPaymentName()] : null;
     }
 
     /**
      * Get transactions array which includes required API information
      *
-     * @param $payment
      * @param $issuer
      * @return array
      */
 
-    public function getTransactions($payment, $issuer)
+    public function getTransactions( $issuer)
     {
-        $ginger_payment = $this->translatePaymentMethod($payment->getCustomFields()['payment_name']);
-
         return array_filter([
             array_filter([
-                'payment_method' => $ginger_payment,
-                'payment_method_details' => array_filter(['issuer_id' => $ginger_payment == 'ideal' ? $issuer : null])
+                'payment_method' => $this->translatePaymentMethod(),
+                'payment_method_details' => array_filter(['issuer_id' => $this->getPaymentName() == 'ideal' ? $issuer : null])
             ])
         ]);
     }
@@ -226,13 +224,12 @@ class Helper
     /**
      * Forming a Webhook url for Ginger Order based on Shopware host and Webhook controller directory
      *
-     * @param $amount
      * @return string
      */
 
-    public function getWebhookUrl($amount): string
+    public function getWebhookUrl(): string
     {
-        return implode('', [$_SERVER['HTTP_ORIGIN']]);
+        return implode('/', [$_SERVER['HTTP_ORIGIN'], 'ginger', 'webhook']);
     }
 
     /**
@@ -272,16 +269,16 @@ class Helper
      * @return array
      */
 
-    protected function getProductLines($product)
+    protected function getProductLines($product, $currency)
     {
         return [
             'name' => $product->getLabel(),
-            'amount' => self::getAmountInCents($product->getTotalPrice()),
+            'amount' => $this->getAmountInCents($product->getTotalPrice()),
             'quantity' => (int)$product->getQuantity(),
-            'vat_percentage' => (int)self::getAmountInCents(self::calculateTax($product->getPrice()->getCalculatedTaxes()->getElements())),
+            'vat_percentage' => (int)$this->getAmountInCents($this->calculateTax($product->getPrice()->getCalculatedTaxes()->getElements())),
             'merchant_order_line_id' => (string)$product->getProductId(),
             'type' => 'physical',
-            'currency' => self::DEFAULT_CURRENCY,
+            'currency' => $currency,
         ];
     }
 
@@ -293,52 +290,71 @@ class Helper
      * @return array
      */
 
-    protected function getShippingLines($sales, $order)
+    protected function getShippingLines($sales, $order,$currency)
     {
         return [
             'name' => (string)$sales->getShippingMethod()->getName(),
-            'amount' => self::getAmountInCents($order->getShippingCosts()->getTotalPrice()),
+            'amount' => $this->getAmountInCents($order->getShippingCosts()->getTotalPrice()),
             'quantity' => $order->getShippingCosts()->getQuantity(),
-            'vat_percentage' => (int)self::getAmountInCents(self::calculateTax($order->getShippingCosts()->getCalculatedTaxes()->getElements())),
+            'vat_percentage' => (int)$this->getAmountInCents($this->calculateTax($order->getShippingCosts()->getCalculatedTaxes()->getElements())),
             'merchant_order_line_id' => (string)$sales->getShippingMethod()->getId(),
             'type' => 'shipping_fee',
-            'currency' => 'EUR',
+            'currency' => $currency,
         ];
+    }
+
+    /**
+     * Sets the context of action
+     * @param $sales_channel_context
+     */
+    public function setSalesChannelContext($sales_channel_context)
+    {
+        $this->sales_channel_context = $sales_channel_context;
+    }
+
+    /**
+     * Sets the current payment method name
+     */
+    public function setPaymentName()
+    {
+        $payment_name_array = explode('_', $this->sales_channel_context->getPaymentMethod()->getCustomFields()['payment_name']);
+        $this->payment_method = end($payment_name_array);
+    }
+
+    /**
+     * Retrieving current payment method name
+     * @return string
+     */
+    public function getPaymentName()
+    {
+        return $this->payment_method;
     }
 
     /**
      * Function that returns order lines in an array for KP Later and Afterpay
      *
-     * @param $sales
      * @param $order
      * @return array|null
      */
 
-    public function getOrderLines($sales, $order)
+    public function getOrderLines($order)
     {
-        if (!in_array($sales->getPaymentMethod()->getCustomFields()['payment_name'], ['emspay_klarnapaylater', 'emspay_afterpay'])) {
+        if (!in_array($this->getPaymentName(), BankConfig::GINGER_REQUIRED_ORDER_LINES_PAYMENTS)) {
             return null;
         }
-        $order_lines = [];
-        foreach ($order->getLineItems()->getElements() as $product) {
-            array_push($order_lines, self::getProductLines($product));
-        }
-        $order->getShippingCosts()->getUnitPrice() > 0 ? array_push($order_lines, self::getShippingLines($sales, $order)) : null;
-        return $order_lines;
-    }
 
-    /**
-     * Function saveEMSLog
-     * Writes a log to a file /app/var/log/ems_plugin_%environment%-%current date%. If there are more than 7 logging files in the log directory, removes the oldest
-     *
-     * @param $msg
-     * @param $context
-     */
-    public function saveEMSLog($msg, $context)
-    {
-        $ems_logger = $this->loggerFactory->createRotating('ems_plugin', 7);
-        $ems_logger->pushProcessor(new WebProcessor());
-        $ems_logger->error($msg, $context);
+        $order_lines = [];
+
+        $currency = $order->getCurrency()->getIsoCode();
+
+        foreach ($order->getLineItems()->getElements() as $product) {
+            array_push($order_lines, $this->getProductLines($product,$currency));
+        }
+
+        if ($order->getShippingCosts()->getUnitPrice() > 0) {
+            array_push($order_lines, $this->getShippingLines($this->sales_channel_context, $order, $currency));
+        }
+        return $order_lines;
     }
 
     /**

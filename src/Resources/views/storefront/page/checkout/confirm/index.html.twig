@@ -1,0 +1,7 @@
+{% sw_extends '@Storefront/storefront/page/checkout/confirm/index.html.twig' %}
+{% block page_checkout_confirm_form_submit %}
+    <input type="hidden" name="ginger_afterpay" id="ginger_afterpay">
+    <input type="hidden" name="ginger_issuer_id" id="ginger_issuer_id">
+    <input type="hidden" name="ginger_afterpay_databagfor_phone_number_place" id="ginger_afterpay_databagfor_phone_number_place">
+    {{ parent() }}
+{% endblock %}

@@ -1,8 +1,9 @@
 <?php
 
-namespace GingerPlugin\emspay;
+namespace GingerPlugin;
 
-use GingerPlugin\emspay\Service\emspay_Gateway;
+use GingerPlugin\Components\BankConfig;
+use GingerPlugin\Components\Redefiner;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -16,26 +17,7 @@ use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
 
 class emspay extends Plugin
 {
-    const handler = emspay_Gateway::class;
-    /**
-     * Payments labels
-     */
-
-    const GINGER_PAYMENTS_LABELS = [
-        'klarnapaylater' => 'Klarna Pay Later',
-        'klarnapaynow' => 'Klarna Pay Now',
-        'paynow' => 'Pay Now',
-        'applepay' => 'Apple Pay',
-        'ideal' => 'iDEAL',
-        'afterpay' => 'Afterpay',
-        'amex' => 'American Express',
-        'bancontact' => 'Bancontact',
-        'banktransfer' => 'Bank Transfer',
-        'creditcard' => 'Credit Card',
-        'paypal' => 'PayPal',
-        'payconiq' => 'Payconiq',
-        'tikkiepaymentrequest' => 'Tikkie Payment Request'
-    ];
+    const GATEWAY_HANDLER = Redefiner::class;
 
     public function install(InstallContext $context): void
     {
@@ -63,13 +45,6 @@ class emspay extends Plugin
 
     private function addPaymentMethod(Context $context): void
     {
-        $paymentMethodExists = $this->getPaymentMethodId();
-
-        // Payment method exists already, no need to continue here
-        if ($paymentMethodExists) {
-            return;
-        }
-
         /** @var PluginIdProvider $pluginIdProvider */
         $pluginIdProvider = $this->container->get(PluginIdProvider::class);
         $pluginId = $pluginIdProvider->getPluginIdByBaseClass(\get_class($this), $context);
@@ -77,35 +52,46 @@ class emspay extends Plugin
 
         $paymentRepository = $this->container->get('payment_method.repository');
 
-        foreach (self::GINGER_PAYMENTS_LABELS as $key => $value) {
+        foreach (BankConfig::GINGER_PAYMENTS_LABELS as $key => $value) {
             $this->addGignerPayment($key, $value, $paymentRepository, $pluginId, $context);
         }
     }
 
     private function addGignerPayment($name, $label, $paymentRepository, $pluginId, $context)
     {
+        $criteria = (new Criteria())
+            ->setLimit(1)
+            ->addFilter(new EqualsFilter('name', $name));
+
+        $ids = $paymentRepository->searchIds($criteria, $context);
+
+        if ($ids->firstId()) {
+            return;
+        }
+
         $payment = [
             // payment handler will be selected by the identifier
-            'handlerIdentifier' => self::handler,
-            'name' => implode(' - ', ['EMS Online', $label]),
-            'customFields' => ['payment_name' => implode('_', ['emspay', $name])],
+            'handlerIdentifier' => self::GATEWAY_HANDLER,
+            'name' => implode(' - ', [BankConfig::PAYMENT_METHODS_PREFIX, $label]),
+            'customFields' => ['payment_name' => implode('_', ['ginger', $name])],
             'description' => 'Pay using ' . $label,
-            'translations' => $this->getTranslations($label, implode('_', ['emspay', $name])),
+            'translations' => $this->getTranslations($label, implode('_', ['ginger', $name])),
             'pluginId' => $pluginId,
         ];
-        return $paymentRepository->create([$payment], $context);
+
+        $paymentRepository->create([$payment], $context);
     }
 
     private function getTranslations($payment_name, $payment_code): array
     {
         return [
             'de-DE' => [
-                'name' => implode(' - ', ['EMS Online', $payment_name]),
+                'name' => implode(' - ', [bankConfig::PAYMENT_METHODS_PREFIX, $payment_name]),
                 'description' => implode('', ['Bezahlen mit ', $payment_name]),
                 'customFields' => ['payment_name' => $payment_code]
             ],
             'en-GB' => [
-                'name' => implode(' - ', ['EMS Online', $payment_name]),
+                'name' => implode(' - ', [bankConfig::PAYMENT_METHODS_PREFIX, $payment_name]),
                 'description' => implode('', ['Pay using ', $payment_name]),
                 'customFields' => ['payment_name' => $payment_code]
             ],
@@ -133,13 +119,13 @@ class emspay extends Plugin
         }
     }
 
-    private function getPaymentMethodId()
+    private function getPaymentMethodId(): ?array
     {
         /** @var EntityRepositoryInterface $paymentRepository */
         $paymentRepository = $this->container->get('payment_method.repository');
 
         // Fetch ID for update
-        $paymentCriteria = (new Criteria())->addFilter(new EqualsFilter('handlerIdentifier', self::handler));
+        $paymentCriteria = (new Criteria())->addFilter(new EqualsFilter('handlerIdentifier', self::GATEWAY_HANDLER));
 
         $paymentIds = $paymentRepository->searchIds($paymentCriteria, Context::createDefaultContext());
 

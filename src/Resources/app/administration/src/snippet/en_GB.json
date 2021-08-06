@@ -1,5 +1,5 @@
 {
-    "emspay-api-test-button": {
+    "ginger-api-test-button": {
         "title": "API Test",
         "success": "Connection was successfully tested",
         "error": "Connection could not be established. Please check the access data",

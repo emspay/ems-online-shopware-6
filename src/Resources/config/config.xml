@@ -7,18 +7,18 @@
         <title lang="de-DE">Grundeinstellungen</title>
 
         <input-field>
-            <name>emsOnlineApikey</name>
+            <name>GingerAPIKey</name>
             <label>EMS Online API-Key</label>
             <label lang="de-DE">EMS Online API-Schlüssel</label>
             <label lang="nl-NL">EMS Online API-sleutel</label>
             <label lang="fr-FR">EMS Online Clé API</label>
-            <helpText>EMS PAY API key is required. Duplicate your ENS PAY API keys from Merchant Portal.</helpText>
-            <helpText lang="de-DE">EMS PAY API Schlüssel ist erforderlich. Duplizieren Sie Ihre ENS PAY API Schlüssel von Merchant Portal.</helpText>
-            <helpText lang="nl-NL">EMS PAY API-sleutel is vereist. Dupliceer uw ENS PAY API-sleutels van Merchant Portal.</helpText>
-            <helpText lang="fr-FR">La clé API EMS PAY est requise. Dupliquez vos clés API ENS PAY à partir du portail marchand.</helpText>
+            <helpText>EMS PAY API key is required. Duplicate your EMS PAY API keys from Merchant Portal.</helpText>
+            <helpText lang="de-DE">EMS PAY API Schlüssel ist erforderlich. Duplizieren Sie Ihre EMS PAY API Schlüssel von Merchant Portal.</helpText>
+            <helpText lang="nl-NL">EMS PAY API-sleutel is vereist. Dupliceer uw EMS PAY API-sleutels van Merchant Portal.</helpText>
+            <helpText lang="fr-FR">La clé API EMS PAY est requise. Dupliquez vos clés API EMS PAY à partir du portail marchand.</helpText>
         </input-field>
         <input-field type="bool">
-            <name>emsOnlineBundleCacert</name>
+            <name>GingerBundleCacert</name>
             <label>EMS Online CaCert</label>
             <disabled>false</disabled>
             <helpText>Use the cURL CA bundle.</helpText>
@@ -28,7 +28,7 @@
         </input-field>
 
         <input-field>
-            <name>emsOnlineKlarnaTestApikey</name>
+            <name>GingerKlarnaTestAPIKey</name>
             <label>EMS Online Klarna Pay Later Test API-Key</label>
             <label lang="de-DE">EMS Online Klarna Pay Later Test API-Schlüssel</label>
             <label lang="nl-NL">EMS Online Klarna Pay Later Test API-sleutel</label>
@@ -40,7 +40,7 @@
         </input-field>
 
         <input-field>
-            <name>emsOnlineAfterpayTestApikey</name>
+            <name>GingerAfterpayTestAPIKey</name>
             <label>EMS Online Afterpay Test API-Key</label>
             <label lang="de-DE">EMS Online Afterpay Test API-Schlüssel</label>
             <label lang="nl-NL">EMS Online Afterpay Test API-sleutel</label>
@@ -52,7 +52,7 @@
         </input-field>
 
         <input-field>
-            <name>emsOnlineAfterpayTestIP</name>
+            <name>GingerAfterpayTestIP</name>
             <label>EMS Online Afterpay Test IP address</label>
             <label lang="de-DE">EMS Online Afterpay Test IP-Adresse</label>
             <label lang="nl-NL">EMS Online Afterpay Test IP-adres</label>
@@ -64,7 +64,7 @@
         </input-field>
 
         <input-field>
-            <name>emsOnlineKlarnaPayLaterTestIP</name>
+            <name>GingerKlarnaPayLaterTestIP</name>
             <label>EMS Online Klarna Pay Later Test IP address</label>
             <label lang="de-DE">EMS Online Klarna Pay Later Test IP-Adresse</label>
             <label lang="nl-NL">EMS Online Klarna Pay Later Test IP-adres</label>
@@ -76,7 +76,7 @@
         </input-field>
 
         <input-field type="text">
-            <name>emsOnlineAfterPayCountries</name>
+            <name>GingerAfterPayCountries</name>
             <label>Countries available for AfterPay</label>
             <label lang="de-DE">Für AfterPay verfügbare Länder</label>
             <label lang="nl-NL">Landen beschikbaar voor AfterPay</label>
@@ -89,8 +89,8 @@
             <helpText lang="fr-FR">Pour autoriser AfterPay à être utilisé pour tout autre pays, ajoutez simplement son code de pays (dans la norme ISO 2) dans le champ "Pays disponibles pour AfterPay". Exemple: BE, NL, FR.</helpText>
         </input-field>
 
-        <component name="emspay-api-test-button">
-            <name>apiTest</name>
+        <component name="ginger-api-test-button">
+            <name>GingerApiTest</name>
             <label>Test API Key</label>
             <label lang="de-DE">API Verbindung testen</label>
         </component>

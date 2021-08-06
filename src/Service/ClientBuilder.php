@@ -1,55 +1,29 @@
 <?php
 
-namespace GingerPlugin\emspay\Service;
+namespace GingerPlugin\Service;
 
-use Ginger\ApiClient;
-use GingerPlugin\emspay\Exception\EmsPluginException;
 use Ginger\Ginger;
-use Shopware\Core\System\SystemConfig\SystemConfigService;
+use GingerPlugin\Components\BankConfig;
+use GingerPlugin\Exception\CustomPluginException;
 
 
 class ClientBuilder
 {
+    public $config;
 
     /**
-     *  Default Ginger endpoint
-     */
-
-    const GINGER_ENDPOINT = 'https://api.online.emspay.eu';
-
-    /**
-     * Plugin settings using for create order from Ginger API
-     */
-
-    const GINGER_PLUGIN_SETTINGS = [
-        'emsOnlineAfterPayCountries',
-        'emsOnlineAfterpayTestIP',
-        'emsOnlineApikey',
-        'emsOnlineBundleCacert',
-        'emsOnlineKlarnaPayLaterTestIP',
-        'emsOnlineKlarnaTestApikey',
-        'emsOnlineAfterpayTestApikey'
-    ];
-
-    private $config;
-
-    public function __construct(SystemConfigService $config)
-    {
-        $this->config = $this->setConfig($config);
-    }
-
-    /**
-     * Create a Gigner client instance.
+     * Create a Ginger client instance.
      *
      * @param string $apiKey
      * @param boolean $useBundle
-     * @return ApiClient
+     * @return Ginger
+     * @throws CustomPluginException
      */
-    public function getGignerClinet(string $apiKey, $useBundle = false): ApiClient
+    public function getGingerClient(string $apiKey, $useBundle = false)
     {
         try {
             return Ginger::createClient(
-                self::GINGER_ENDPOINT,
+                BankConfig::API_ENDPOINT,
                 $apiKey,
                 $useBundle ?
                     [
@@ -57,14 +31,13 @@ class ClientBuilder
                     ] : []
             );
         } catch (\Exception $exception) {
-            throw new EmsPluginException($exception->getMessage());
+            throw new CustomPluginException($exception->getMessage(), 500, 'GINGER_FAILED_BUILD_CLIENT');
         }
     }
 
     /**
-     *  function get caCert.pem path
+     *  Function get caCert.pem path
      */
-
     protected static function getCaCertPath()
     {
         return dirname(__DIR__) . '/assets/cacert.pem';
@@ -72,23 +45,20 @@ class ClientBuilder
 
     /**
      *  Get the Ginger Client using client configuration
-     *
-     * @param null $method
-     * @return ApiClient
      */
     public function getClient($method = null)
     {
         switch ($method) {
-            case 'emspay_klarnapaylater' :
-                $api_key = !empty($this->config['emsOnlineKlarnaTestApikey']) ? $this->config['emsOnlineKlarnaTestApikey'] : $this->config['emsOnlineApikey'];
+            case 'klarnapaylater' :
+                $api_key = $this->config['GingerKlarnaTestAPIKey'] ?? $this->config['GingerAPIKey'];
                 break;
-            case 'emspay_afterpay' :
-                $api_key = !empty($this->config['emsOnlineAfterpayTestApikey']) ? $this->config['emsOnlineAfterpayTestApikey'] : $this->config['emsOnlineApikey'];
+            case 'afterpay' :
+                $api_key = $this->config['GingerAfterpayTestAPIKey'] ?? $this->config['GingerAPIKey'];
                 break;
             default :
-                $api_key = $this->config['emsOnlineApikey'];
-        }
-        return $this->getGignerClinet($api_key, $this->config['emsOnlineBundleCacert']);
+                $api_key = $this->config['GingerAPIKey'] ?? '';
+        };
+        return $api_key ? $this->getGingerClient($api_key, $this->config['GingerBundleCacert']) : false;
     }
 
     /**
@@ -104,25 +74,23 @@ class ClientBuilder
     /**
      * Get the list of settings from the plugin settings page, and fill which is had the version conflict
      *
-     * @param $sys
+     * @param $configService
      * @return array
      */
-
-    protected function setConfig($sys)
+    protected function setConfig($configService)
     {
-        $config = array_fill_keys(self::GINGER_PLUGIN_SETTINGS, null);
-        $system_config = $sys->get('emspay.config');
-        foreach (self::GINGER_PLUGIN_SETTINGS as $key) {
-            $config[$key] = isset($system_config[$key]) ? $system_config[$key] : $this->getDefaultValue($key);
-
+        $typical_configuration = array_fill_keys(BankConfig::PLUGIN_SETTINGS, null);
+        $config = $configService->get(implode('.', [BankConfig::PLUGIN_TECH_PREFIX, 'config']));
+        foreach (BankConfig::PLUGIN_SETTINGS as $key) {
+            $typical_configuration[$key] = $config[$key] ?? $this->getDefaultValue($key);
         }
-        return $config;
+        return $typical_configuration;
     }
 
-    protected function getDefaultValue($key)
+    protected function getDefaultValue($key): ?string
     {
         $value = null;
-        if ($key == 'emsOnlineAfterPayCountries') $value = 'NL, BE';
+        if ($key == 'GingerAfterPayCountries') $value = 'NL, BE';
         return $value;
     }
 }
