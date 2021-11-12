@@ -10,7 +10,8 @@
         <service class="GingerPlugin\Service\ClientBuilder" id="ginger.service.client_builder"/>
         <service id="GingerPlugin\Components\Redefiner">
             <argument type="service" id="order.repository"/>
-            <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
+            <argument type="service"
+                      id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
             <tag name="shopware.payment.method.async"/>
         </service>
@@ -19,7 +20,8 @@
             <call method="setContainer">
                 <argument type="service" id="service_container"/>
             </call>
-            <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
+            <argument type="service"
+                      id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
             <argument type="service" id="GingerPlugin\Components\Redefiner"/>
         </service>
         <service id="GingerPlugin\Controller\Api\ApiTestController" public="true">
@@ -36,6 +38,10 @@
             <argument type="service" id="payment_method.repository"/>
             <tag name="kernel.event_subscriber"/>
         </service>
+        <service class="GingerPlugin\Subscriber\ReturnUrlExceptions" id="ginger.subscriber.return_url_exceptions">
+            <argument type="service" id="GingerPlugin\Components\Redefiner"/>
+            <tag name="kernel.event_subscriber"/>
+        </service>
         <service class="GingerPlugin\Subscriber\PaymentsCustomFields" id="ginger.subscriber.payments_custom_fields">
             <argument type="service" id="payment_method.repository"/>
             <argument type="service" id="GingerPlugin\Components\Redefiner"/>
@@ -46,7 +52,14 @@
             <argument type="service" id="order.repository"/>
             <argument type="service" id="order_delivery.repository"/>
             <argument type="service" id="GingerPlugin\Components\Redefiner"/>
-            <tag name="kernel.event_subscriber" />
+            <tag name="kernel.event_subscriber"/>
+        </service>
+        <service class="GingerPlugin\Subscriber\RefundOrder" id="ginger.subscriber.refund_order">
+            <argument type="service" id="payment_method.repository"/>
+            <argument type="service" id="order.repository"/>
+            <argument type="service" id="order_transaction.repository"/>
+            <argument type="service" id="GingerPlugin\Components\Redefiner"/>
+            <tag name="kernel.event_subscriber"/>
         </service>
     </services>
 </container>

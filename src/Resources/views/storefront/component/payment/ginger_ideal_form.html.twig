@@ -1,0 +1,35 @@
+<div id="ideal_custom_form">
+    <div class="custom-ginger-fields">
+    <span class="mini-alert"
+          id="ginger_choice_issuer_ideal">To continue, please, select your Bank issuer from the list</span>
+        <select class="custom-select" id="ginger_issuer" name="ginger_issuer_id">
+            <option value="">Choose your bank</option>
+            {% for issuer in payment.customFields.issuers %}
+                <option value="{{ issuer.id }} ">
+                    {{ issuer.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let confirmForm = document.getElementById('confirmOrderForm') !== null ? document.getElementById('confirmOrderForm') : document.getElementById('confirmOrderForm')
+        let issuer_form = document.getElementById('ginger_issuer');
+        if (issuer_form) {
+            issuer_form.addEventListener('change', function () {
+                document.getElementById('ginger_issuer_id').value = this.value;
+                document.getElementById('ginger_choice_issuer_ideal').style.display = 'none'
+            });
+        }
+        confirmForm.addEventListener('submit', (event) => {
+            if (isCheckedByField('ginger_issuer')) {
+                if (!document.getElementById('ginger_issuer_id').value) {
+                    setFocus('ginger_issuer');
+                    document.getElementById('ginger_choice_issuer_ideal').style.display = 'block'
+                    event.preventDefault();
+                }
+            }
+        });
+    })
+</script>

@@ -1,10 +1,10 @@
 # Changelog Shopware 6
 
-** 1.0.0 **
+## 1.0.0 
 
 * Initial Version
 
-** 1.1.0 **
+## 1.1.0
 
 * Has been implemented: 
     * Order Capturing functionality.
@@ -20,23 +20,23 @@
     * Issuer Id Selector field.
     * Afterpay birthday select field.
 
-1.2.0
+## 1.2.0
 
 * Added iBAN information for Bank-Transfer payment method.
 * Fixed AfterPay Country Validation. 
 * Removed use webhook option from settings (also from code realization).
 
-1.2.1
+## 1.2.1
 
 * Fixed iDealIssuer issue related to last API update.
   
-1.3.0
+## 1.3.0
 
 * Updates & fixes based on Shopware 6 guidelines.
 * Added Test API Key button to settings page.
 * Added Afterpay birthday validation.
 
-1.4.0 
+## 1.4.0 
 
 * Refactored code to handle GPE solution. 
 * Unified bank labels to handle GPE solution.
@@ -60,3 +60,18 @@
 * Implemented CreateOrderTest using PHPUnit extension to check that latest changes doesn't crash the main functionality.
 * Implemented AsyncPaymentFinalizeException in case when order after pay attempt setts with status ‘error’.
 * Implemented GingerFeaturesCheck and GingerPaymentMethodRepositoryWorker traits to provide reusing code for checking availability in other places in the plugin.
+
+## 1.5.0
+
+* Order extra array expanded to provide more detailed information.
+* Implemented subscriber ReturnUrlExceptions to provide warning messages to customer with information from ginger order.
+* Implemented hide custom form method if the checkout page is actually edit order page. 
+* Implemented `orderLines` for every order.
+* Implemented test coverage for expanded order extra array.
+* Implemented improvement into PHPUnit tests coverage.
+* Implemented Refund feature.
+* Implemented check for selecting Bank Issuer option for iDeal.
+* Implemented custom styles for ginger inputs.
+* Templates for payment methods on checkout have been decomposed.
+* Fixes `vatPercentage` orderLines mismatch.
+* Fixes `orderLines` mismatch when quantity of product > 1.

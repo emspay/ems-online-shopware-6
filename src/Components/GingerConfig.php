@@ -4,6 +4,8 @@ namespace GingerPlugin\Components;
 
 class GingerConfig
 {
+    const SHOPWARE_VERSION = '6.4.2.1';
+
     const SHOPWARE_TO_BANK_PAYMENTS =
         [
             'applepay' => 'apple-pay',
@@ -57,10 +59,5 @@ class GingerConfig
     ];
     const GINGER_REQUIRED_IBAN_INFO_PAYMENTS = [
         'bank-transfer'
-    ];
-    const GINGER_REQUIRED_ORDER_LINES_PAYMENTS = [
-        'afterpay',
-        'klarnadirectdebit',
-        'klarnapaylater'
     ];
 }

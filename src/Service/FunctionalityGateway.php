@@ -28,13 +28,13 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
      * Gateway constructor.
      * @param EntityRepositoryInterface $orderRepository
      * @param OrderTransactionStateHandler $transactionStateHandler
-     * @param SystemConfigService $config
+     * @param \Shopware\Core\System\SystemConfig\SystemConfigService $configService
      */
     public function __construct
     (
-        EntityRepositoryInterface $orderRepository,
+        EntityRepositoryInterface    $orderRepository,
         OrderTransactionStateHandler $transactionStateHandler,
-        SystemConfigService $configService
+        SystemConfigService          $configService
     )
     {
         $this->orderRepository = $orderRepository;
@@ -51,8 +51,8 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
      */
     public function pay(
         AsyncPaymentTransactionStruct $transaction,
-        RequestDataBag $dataBag,
-        SalesChannelContext $salesChannelContext
+        RequestDataBag                $dataBag,
+        SalesChannelContext           $salesChannelContext
     ): RedirectResponse
     {
         // Method that sends the return URL to the external gateway and gets a redirect URL back
@@ -62,6 +62,13 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
             $this->ginger = $this->getClient($this->getPaymentName());
             $pre_order = $this->processOrder($transaction);
             $order = $this->ginger->createOrder($pre_order);
+
+            $this->saveGingerInformation(
+                $transaction->getOrderTransaction()->getId(),
+                ['ginger_order_id' => $order['id']],
+                $this->orderRepository,
+                $salesChannelContext->getContext()
+            );
 
             /**
              * Condition if order created with error status
@@ -93,12 +100,11 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
      * @param AsyncPaymentTransactionStruct $transaction
      * @param Request $request
      * @param SalesChannelContext $salesChannelContext
-     * @throws CustomPluginException
      */
     public function finalize(
         AsyncPaymentTransactionStruct $transaction,
-        Request $request,
-        SalesChannelContext $salesChannelContext
+        Request                       $request,
+        SalesChannelContext           $salesChannelContext
     ): void
     {
         $this->setSalesChannelContext($salesChannelContext);
@@ -117,13 +123,6 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
                 $context
             );
         }
-
-        $this->saveGingerInformation(
-            $transaction->getOrderTransaction()->getId(),
-            ['ginger_order_id' => $order['id']],
-            $this->orderRepository,
-            $context
-        );
 
         $transactionId = $transaction->getOrderTransaction()->getId();
 
@@ -165,7 +164,6 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
 
     public function processOrder($transaction): array
     {
-        $issuer_id = $this->getIssuerId();
         return array_filter([
             'amount' => $this->getAmountInCents($transaction->getOrder()->getAmountTotal()),           // Amount in cents
             'currency' => $this->sales_channel_context->getCurrency()->getIsoCode(),                   // Currency
@@ -173,7 +171,7 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
             'description' => $this->getOrderDescription($transaction->getOrder()->getOrderNumber()),   // Description
             'customer' => $this->getCustomer($this->sales_channel_context->getCustomer()),             // Customer information
             'order_lines' => $this->getOrderLines($transaction->getOrder()),                           // Order Lines
-            'transactions' => $this->getTransactions($issuer_id),                                      // Transactions Array
+            'transactions' => $this->getTransactions($this->getIssuerId()),                            // Transactions Array
             'return_url' => $transaction->getReturnUrl(),                                              // Return URL
             'webhook_url' => $this->getWebhookUrl(),                                                   // Webhook URL
             'extra' => $this->getExtraArray($transaction->getOrderTransaction()->getId()),             // Extra information

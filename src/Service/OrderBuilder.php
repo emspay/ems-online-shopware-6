@@ -23,7 +23,7 @@ class OrderBuilder extends ClientBuilder
     /**
      * Ginger ShopWare 6 plugin version
      */
-    const PLUGIN_VERSION = "1.4.0";
+    const PLUGIN_VERSION = "1.5.0";
 
     /**
      * Store the current payment method name;
@@ -211,14 +211,25 @@ class OrderBuilder extends ClientBuilder
      * @return array
      */
 
-    public function getTransactions( $issuer)
+    public function getTransactions($issuer = null)
     {
         return array_filter([
             array_filter([
                 'payment_method' => $this->translatePaymentMethod(),
-                'payment_method_details' => array_filter(['issuer_id' => $this->getPaymentName() == 'ideal' ? $issuer : null])
+                'payment_method_details' => array_filter($this->getPaymentMethodDetails($issuer))
             ])
         ]);
+    }
+
+    public function getPaymentMethodDetails($issuer = null)
+    {
+        $result = [];
+        switch ($this->getPaymentName()) {
+            case 'ideal' :
+                $result = ['issuer_id' => $issuer];
+                break;
+        }
+        return $result;
     }
 
     /**
@@ -240,10 +251,61 @@ class OrderBuilder extends ClientBuilder
      * @return array
      */
 
-    public function getExtraArray($id)
+    public function getExtraArray($id): array
     {
-        return ['plugin' => sprintf('ShopWare 6 v%s', self::PLUGIN_VERSION),
-            'sw_order_id' => $id];
+        return [
+            'platform_name' => $this->getPlatformName(),
+            'platform_version' => $this->getPlatformVersion(),
+            'plugin_name' => $this->getPluginName(),
+            'plugin_version' => $this->getPluginVersion(),
+            'user_agent' => $this->getUserAgent(),
+            'sw_order_id' => $id
+        ];
+    }
+
+    /**
+     * Get the plugin name in format 'bank prefix-shopware-6'
+     * @return string
+     */
+    public function getPluginName(): string
+    {
+        return implode('-', [BankConfig::PLUGIN_NAME, 'shopware-6']);
+    }
+
+    /**
+     * Get the plugin version, this version used everywhere in plugin.
+     * @return string
+     */
+    public function getPluginVersion(): string
+    {
+        return self::PLUGIN_VERSION;
+    }
+
+    /**
+     * Retrieve a Shopware 6 version, there is no way to retrieve this field dynamic.
+     * @return string
+     */
+    public function getPlatformVersion(): string
+    {
+        return BankConfig::SHOPWARE_VERSION;
+    }
+
+    /**
+     * Retrieve just a label for Shopware 6.
+     * @return string
+     */
+    public function getPlatformName(): string
+    {
+        return 'Shopware 6';
+    }
+
+    /**
+     * Get user agent of the user.
+     * @return string
+     */
+    public function getUserAgent(): string
+    {
+        return $_SERVER['HTTP_USER_AGENT'];
     }
 
     /**
@@ -253,27 +315,28 @@ class OrderBuilder extends ClientBuilder
      * @return int
      */
 
-    protected function calculateTax($taxElements)
+    protected function calculateTax($taxElements): int
     {
-        $summ = 0;
+        $percentage = 0;
         foreach ($taxElements as $tax) {
-            $summ += $tax->getTax();
+            $percentage += $tax->getTaxRate();
         }
-        return $summ;
+        return $percentage;
     }
 
     /**
      * Function what collect array for product order line
      *
      * @param $product
+     * @param $currency
      * @return array
      */
 
-    protected function getProductLines($product, $currency)
+    protected function getProductLines($product, $currency): array
     {
         return [
             'name' => $product->getLabel(),
-            'amount' => $this->getAmountInCents($product->getTotalPrice()),
+            'amount' => $this->getAmountInCents($product->getUnitPrice()),
             'quantity' => (int)$product->getQuantity(),
             'vat_percentage' => (int)$this->getAmountInCents($this->calculateTax($product->getPrice()->getCalculatedTaxes()->getElements())),
             'merchant_order_line_id' => (string)$product->getProductId(),
@@ -287,10 +350,11 @@ class OrderBuilder extends ClientBuilder
      *
      * @param $sales
      * @param $order
+     * @param $currency
      * @return array
      */
 
-    protected function getShippingLines($sales, $order,$currency)
+    protected function getShippingLines($sales, $order, $currency): array
     {
         return [
             'name' => (string)$sales->getShippingMethod()->getName(),
@@ -325,7 +389,7 @@ class OrderBuilder extends ClientBuilder
      * Retrieving current payment method name
      * @return string
      */
-    public function getPaymentName()
+    public function getPaymentName(): string
     {
         return $this->payment_method;
     }
@@ -334,21 +398,17 @@ class OrderBuilder extends ClientBuilder
      * Function that returns order lines in an array for KP Later and Afterpay
      *
      * @param $order
-     * @return array|null
+     * @return array
      */
 
-    public function getOrderLines($order)
+    public function getOrderLines($order): array
     {
-        if (!in_array($this->getPaymentName(), BankConfig::GINGER_REQUIRED_ORDER_LINES_PAYMENTS)) {
-            return null;
-        }
-
         $order_lines = [];
 
         $currency = $order->getCurrency()->getIsoCode();
 
         foreach ($order->getLineItems()->getElements() as $product) {
-            array_push($order_lines, $this->getProductLines($product,$currency));
+            array_push($order_lines, $this->getProductLines($product, $currency));
         }
 
         if ($order->getShippingCosts()->getUnitPrice() > 0) {

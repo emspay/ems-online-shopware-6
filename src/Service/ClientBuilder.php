@@ -10,6 +10,7 @@ use GingerPlugin\Exception\CustomPluginException;
 class ClientBuilder
 {
     public $config;
+    private $api_key;
 
     /**
      * Create a Ginger client instance.
@@ -21,6 +22,7 @@ class ClientBuilder
      */
     public function getGingerClient(string $apiKey, $useBundle = false)
     {
+        $this->api_key = $apiKey;
         try {
             return Ginger::createClient(
                 BankConfig::API_ENDPOINT,

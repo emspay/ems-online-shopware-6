@@ -1,0 +1,48 @@
+<div id="afterpay_custom_form">
+    <div class="custom-ginger-fields">
+        <label>Please enter your date of birth in the format Year/Month/Day (YYYY/MM/DD)</label><br>
+        <span id="ginger_afterpay_birthday_error_message" style="visibility: hidden; color: red;">The date is invalid, or in invalid format</span><br>
+        <span>Birthday:</span> <input class="ginger_input" type='text'
+                                      value="{{ payment.customFields.ginger_afterpay_birthday }}"
+                                      name='ginger_afterpay_birthday' id='ginger_afterpay_birthday'>
+    </div>
+    <div class="custom-ginger-fields">
+        <label>Please enter your phone number if you have not entered it in your online store account.</label><br>
+        <span>Phone number:</span> <input class="ginger_input" type='text'
+                                          value="{{ payment.customFields.ginger_afterpay_phone_number }}"
+                                          name='ginger_afterpay_phone_number' id='ginger_afterpay_phone_number'>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('ginger_afterpay_phone_number').addEventListener('change', function () {
+            document.getElementById('ginger_afterpay_databagfor_phone_number_place').value = this.value;
+        });
+        document.getElementById('ginger_afterpay_birthday').addEventListener('change', function () {
+            let is_date = this.value.match(/([12]\d{3}\/(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01]))/);
+            if (!is_date) {
+                document.getElementById('ginger_afterpay_birthday_error_message').style.visibility = "visible";
+                this.style.borderColor = "red";
+                set_buttons_disabled_state(true);
+            } else {
+                document.getElementById('ginger_afterpay_birthday_error_message').style.visibility = "hidden";
+                this.style.borderColor = 'green';
+                document.getElementById('ginger_afterpay').value = this.value;
+                set_buttons_disabled_state(false);
+            }
+        });
+
+        let confirmForm = document.getElementById('confirmOrderForm') !== null ? document.getElementById('confirmOrderForm') : document.getElementById('confirmOrderForm')
+        confirmForm.addEventListener('change', function () {
+            let is_checked = document.getElementById('ginger_afterpay_birthday').parentElement.parentElement.querySelector('input[type=radio]:checked');
+            console.log(is_checked);
+            if (is_checked == null) {
+                set_buttons_disabled_state(false);
+            } else {
+                let is_date = document.getElementById('ginger_afterpay_birthday').value.match(/([12]\d{3}\/(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01]))/);
+                is_date ? set_buttons_disabled_state(false) : set_buttons_disabled_state(true);
+            }
+
+        })
+    });
+</script>
