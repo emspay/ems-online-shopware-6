@@ -24,14 +24,15 @@
       "en-GB": "https://emspay.eu/online-payment-solutions"
     },
     "description": {
-      "de-DE": "EMS Online-Bibliothek",
-      "en-GB": "EMS Online Library"
+      "de-DE": "EMS Online Zahlungs-Plugin",
+      "en-GB": "EMS Online Payment Plugin"
     }
   },
   "autoload": {
     "psr-4": {
       "GingerPlugin\\": "src/",
-      "Ginger\\": "src/vendor/gingerpayments/ginger-php/src"
+      "Ginger\\": "src/vendor/gingerpayments/ginger-php/src",
+      "GingerPluginSdk\\": "src/vendor/gingerplugins/ginger-plugin-sdk/src"
     }
   }
 }

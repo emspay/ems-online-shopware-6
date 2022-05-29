@@ -89,6 +89,15 @@
             <helpText lang="fr-FR">Pour autoriser AfterPay à être utilisé pour tout autre pays, ajoutez simplement son code de pays (dans la norme ISO 2) dans le champ "Pays disponibles pour AfterPay". Exemple: BE, NL, FR.</helpText>
         </input-field>
 
+
+        <input-field type="bool">
+            <name>GingerGHCFeature</name>
+            <label>Hosted Card feature</label>
+            <helpText>Enable Hosted Card feature</helpText>
+            <defaultValue>false</defaultValue>
+            <disabled>true</disabled>
+        </input-field>
+
         <component name="ginger-api-test-button">
             <name>GingerApiTest</name>
             <label>Test API Key</label>
