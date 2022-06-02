@@ -26,6 +26,7 @@ class GingerConfig
             'klarnadirectdebit' => 'klarna-direct-debit',
             'sofort' => 'sofort',
         ];
+
     const PLUGIN_SETTINGS = [
         'GingerAfterPayCountries',
         'GingerAfterpayTestIP',
@@ -35,6 +36,7 @@ class GingerConfig
         'GingerKlarnaTestAPIKey',
         'GingerAfterpayTestAPIKey',
     ];
+
     const GINGER_PAYMENTS_LABELS = [
         'klarnapaylater' => 'Klarna Pay Later',
         'klarnapaynow' => 'Klarna Pay Now',
@@ -53,10 +55,12 @@ class GingerConfig
         'klarnadirectdebit' => 'Klarna Direct Debit',
         'googlepay' => 'Google Pay',
     ];
+
     const GINGER_IP_VALIDATION_PAYMENTS = [
         'afterpay',
         'klarnapaylater',
     ];
+
     const GINGER_REQUIRED_IBAN_INFO_PAYMENTS = [
         'bank-transfer',
     ];

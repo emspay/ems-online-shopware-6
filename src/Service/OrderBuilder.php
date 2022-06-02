@@ -23,7 +23,7 @@ class OrderBuilder extends ClientBuilder
     /**
      * Ginger ShopWare 6 plugin version
      */
-    const PLUGIN_VERSION = "1.5.1";
+    const PLUGIN_VERSION = "1.6.0";
 
     /**
      * Store the current payment method name;

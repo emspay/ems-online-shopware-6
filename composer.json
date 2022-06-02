@@ -1,7 +1,7 @@
 {
   "name": "ginger/emspay_payments",
   "description": "EMS Online payments all-in-one plugin",
-  "version": "v1.5.1",
+  "version": "v1.6.0",
   "type": "shopware-platform-plugin",
   "license": "proprietary",
   "authors": [
