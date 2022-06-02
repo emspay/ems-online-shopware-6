@@ -3,32 +3,45 @@
 
 namespace GingerPlugin\Subscriber;
 
-use Dompdf\Exception;
-use Ginger\ApiClient;
-use GingerPlugin\Exception\CustomPluginException;
+use GingerPlugin\Components\GingerExceptionHandlerTrait;
 use GingerPlugin\Components\Redefiner;
+use GingerPlugin\Components\BankConfig;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenContainerEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Shopware\Core\System\SalesChannel\Event\SalesChannelContextSwitchEvent;
+use Shopware\Core\Framework\Log\LoggerFactory;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class PaymentsCustomFields implements EventSubscriberInterface
 {
+    use GingerExceptionHandlerTrait;
+
     public $paymentMethodRepository;
     public $client;
+    public $loggerFactory;
+    private array $config;
 
     /**
      * paymentsCustomFields constructor.
      * @param EntityRepositoryInterface $paymentMethodRepository
      * @param Redefiner $redefiner
+     * @param LoggerFactory $loggerFactory
+     * @param SystemConfigService $systemConfigService
      */
-    public function __construct(EntityRepositoryInterface $paymentMethodRepository, Redefiner $redefiner)
+    public function __construct(
+        EntityRepositoryInterface $paymentMethodRepository,
+        Redefiner                 $redefiner,
+        LoggerFactory             $loggerFactory,
+        SystemConfigService       $systemConfigService)
     {
         $this->paymentMethodRepository = $paymentMethodRepository;
         $this->client = $redefiner->getClient();
+        $this->loggerFactory = $loggerFactory;
+        $this->config  = $systemConfigService->get(implode('.', [BankConfig::PLUGIN_TECH_PREFIX, 'config']));
     }
 
     /**
@@ -42,10 +55,7 @@ class PaymentsCustomFields implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * @param CheckoutConfirmPageLoadedEvent $event
-     */
-    public function updateIdealIssuers(CheckoutConfirmPageLoadedEvent $event)
+    public  function updateIdealIssuers(CheckoutConfirmPageLoadedEvent $event)
     {
         $idealGateway = $this->getGatewayEntity($event, 'ginger_ideal');
 
@@ -67,7 +77,7 @@ class PaymentsCustomFields implements EventSubscriberInterface
 
             $this->updateCustomFields($event, $idealGateway->getID(), $customFields);
         } catch (\Exception $exception) {
-            throw new CustomPluginException($exception->getMessage(), 500, 'GINGER_UPDATE_CUSTOM_FIELDS_ERROR_ERROR');
+            $this->handleException($exception, $event);
         }
     }
 

@@ -24,7 +24,7 @@ class GingerConfig
             'wechat' => 'wechat',
             'googlepay' => 'google-pay',
             'klarnadirectdebit' => 'klarna-direct-debit',
-            'sofort' => 'sofort'
+            'sofort' => 'sofort',
         ];
     const PLUGIN_SETTINGS = [
         'GingerAfterPayCountries',
@@ -33,7 +33,7 @@ class GingerConfig
         'GingerBundleCacert',
         'GingerKlarnaPayLaterTestIP',
         'GingerKlarnaTestAPIKey',
-        'GingerAfterpayTestAPIKey'
+        'GingerAfterpayTestAPIKey',
     ];
     const GINGER_PAYMENTS_LABELS = [
         'klarnapaylater' => 'Klarna Pay Later',
@@ -51,13 +51,13 @@ class GingerConfig
         'tikkiepaymentrequest' => 'Tikkie Payment Request',
         'sofort' => 'Sofort',
         'klarnadirectdebit' => 'Klarna Direct Debit',
-        'googlepay' => 'Google Pay'
+        'googlepay' => 'Google Pay',
     ];
     const GINGER_IP_VALIDATION_PAYMENTS = [
         'afterpay',
-        'klarnapaylater'
+        'klarnapaylater',
     ];
     const GINGER_REQUIRED_IBAN_INFO_PAYMENTS = [
-        'bank-transfer'
+        'bank-transfer',
     ];
 }

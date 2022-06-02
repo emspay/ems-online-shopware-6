@@ -23,7 +23,7 @@ class OrderBuilder extends ClientBuilder
     /**
      * Ginger ShopWare 6 plugin version
      */
-    const PLUGIN_VERSION = "1.5.0";
+    const PLUGIN_VERSION = "1.5.1";
 
     /**
      * Store the current payment method name;
@@ -228,8 +228,36 @@ class OrderBuilder extends ClientBuilder
             case 'ideal' :
                 $result = ['issuer_id' => $issuer];
                 break;
+            case 'creditcard' :
+                $vault_token = $this->getVaultToken();
+                if ($vault_token == 'ghc_use_declined') {
+                    return $result;
+                }
+                $cvc_code = $this->getCVC();
+                if ($vault_token && $cvc_code) {
+                    $result = [
+                        "one_click_type" => "one-click",
+                        "vault_token" => $vault_token,
+                        "cvc" => $cvc_code
+                    ];
+                } elseif ($vault_token == 'ghc_add_new') {
+                    $result = [
+                        "one_click_type" => "first"
+                    ];
+                }
+                break;
         }
         return $result;
+    }
+
+    public function getCVC()
+    {
+        return filter_input(INPUT_POST, 'ghc_cvc', FILTER_SANITIZE_STRING);
+    }
+
+    public function getVaultToken()
+    {
+        return filter_input(INPUT_POST, 'ghc_vault_token', FILTER_SANITIZE_STRING);
     }
 
     /**

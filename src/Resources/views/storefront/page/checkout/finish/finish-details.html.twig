@@ -1,6 +1,29 @@
 {% sw_extends '@Storefront/storefront/page/checkout/finish/finish-details.html.twig' %}
 {% block page_checkout_finish_teaser %}
     {{ parent() }}
+    {% if page.order.customFields.ginger_ghc_details is defined %}
+        <script>
+            let new_vault = {
+                'truncated_pan': '{{ page.order.customFields.ginger_ghc_details.truncated_pan }}',
+                'vault_token': '{{ page.order.customFields.ginger_ghc_details.vault_token }}'
+            }
+
+            vault_storage = localStorage.getItem('ginger_ghc_vault') ? JSON.parse(localStorage.getItem('ginger_ghc_vault')) : []
+
+            existing_storage = vault_storage.map(function (vault_combo) {
+                if (vault_combo['truncated_pan'] === new_vault['truncated_pan'])
+                {
+                    return false
+                }
+            })
+
+            if (!existing_storage.includes(false) && new_vault['truncated_pan'] !== "" && new_vault['vault_token'] !== "") {
+                vault_storage.push(new_vault)
+            }
+
+            localStorage.setItem('ginger_ghc_vault', JSON.stringify(vault_storage))
+        </script>
+    {% endif %}
     {% if page.order.customFields.ginger_order_payment_method_details is defined %}
         <div class="card-title">
             IBAN Information

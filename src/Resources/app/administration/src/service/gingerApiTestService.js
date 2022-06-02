@@ -8,7 +8,6 @@ class ApiClient extends ApiService {
 
     check(values) {
         const headers = this.getBasicHeaders({});
-        console.log(1);
         return this.httpClient
             .post(`_action/${this.getApiBasePath()}/verify`, values,{
                 headers

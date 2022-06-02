@@ -3,11 +3,15 @@
 namespace GingerPlugin\Service;
 
 use GingerPlugin\Components\BankConfig;
+use GingerPlugin\Components\GingerExceptionHandlerTrait;
 use GingerPlugin\Exception\CustomPluginException;
 use GingerPlugin\Components\Redefiner;
 use Ginger\ApiClient;
+use http\Exception;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
+use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
+use Shopware\Core\Framework\Event\ShopwareSalesChannelEvent;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
@@ -17,29 +21,36 @@ use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentFinalizeException;
+use Shopware\Core\Framework\Log\LoggerFactory;
 
 class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHandlerInterface
 {
+    use GingerExceptionHandlerTrait;
+
     public $ginger;
     public $transactionStateHandler;
     public $orderRepository;
+    public $loggerFactory;
 
     /**
      * Gateway constructor.
      * @param EntityRepositoryInterface $orderRepository
      * @param OrderTransactionStateHandler $transactionStateHandler
      * @param \Shopware\Core\System\SystemConfig\SystemConfigService $configService
+     * @param LoggerFactory $loggerFactory
      */
     public function __construct
     (
         EntityRepositoryInterface    $orderRepository,
         OrderTransactionStateHandler $transactionStateHandler,
-        SystemConfigService          $configService
+        SystemConfigService          $configService,
+        LoggerFactory                $loggerFactory
     )
     {
         $this->orderRepository = $orderRepository;
         $this->transactionStateHandler = $transactionStateHandler;
         $this->config = $this->setConfig($configService);
+        $this->loggerFactory = $loggerFactory;
     }
 
     /**
@@ -47,7 +58,6 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
      * @param RequestDataBag $dataBag
      * @param SalesChannelContext $salesChannelContext
      * @return RedirectResponse
-     * @throws CustomPluginException
      */
     public function pay(
         AsyncPaymentTransactionStruct $transaction,
@@ -71,11 +81,14 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
             );
 
             /**
-             * Condition if order created with error status
+             * Case, when order created with error, so we can't get the order_id from Ginger anymore.
              */
             if ($order['status'] == 'error') {
-                $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $salesChannelContext->getContext());
-                throw new CustomPluginException(current($order['transactions'])['customer_message'], 500, 'GINGER_ORDER_PLACED_WITH_STATUS_ERROR');
+                $this->processFailedPayment(
+                    new \Exception($order['transactions']['customer_message'], 500),
+                    $transaction,
+                    $salesChannelContext
+                );
             }
 
             /**
@@ -87,12 +100,41 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
                 return new RedirectResponse($order['return_url']);
             }
         } catch (\Exception $e) {
-            throw new CustomPluginException($e->getMessage(), 500, 'GINGER_IN_PAY_FUNCTION_ERROR');
+            $this->processFailedPayment(
+                $e,
+                $transaction,
+                $salesChannelContext
+            );
         }
 
-        // Redirect to external gateway
-        return new RedirectResponse(
-            $order['order_url'] ?? current($order['transactions'])['payment_url']
+        // Retrieving link to payment page, the order already created successfully.
+        try {
+            $payment_link = $order['order_url'] ?? current($order['transactions'])['payment_url'];
+            // Redirect to payment page
+            return new RedirectResponse($payment_link);
+        } catch (\Exception $exception) {
+            $this->processFailedPayment(
+                $exception,
+                $transaction,
+                $salesChannelContext
+            );
+        }
+        return new RedirectResponse($order['return_url'] . '&' . "order_id=" . $order['id']);
+    }
+
+    public function processFailedPayment($e, $transaction, $salesChannelContext)
+    {
+        $this->transactionStateHandler->fail($transaction->getOrderTransaction()->getId(), $salesChannelContext->getContext());
+        $this->handleException($e);
+        $this->saveGingerInformation(
+            $transaction->getOrderTransaction()->getId(),
+            ['error_message' => $e->getMessage()],
+            $this->orderRepository,
+            $salesChannelContext->getContext()
+        );
+        throw new AsyncPaymentProcessException(
+            (string)$transaction->getOrderTransaction()->getId(),
+            $e->getMessage()
         );
     }
 
@@ -134,6 +176,18 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
 
         switch ($paymentState) {
             case 'completed' :
+                if (isset(current($order['transactions'])['payment_method_details']['one_click_type']) && current($order['transactions'])['payment_method_details']['one_click_type'] == 'first') {
+                    $this->saveGingerInformation(
+                        $transaction->getOrderTransaction()->getId(), [
+                        'ginger_ghc_details' => [
+                            'truncated_pan' => current($order['transactions'])['payment_method_details']['truncated_pan'],
+                            'vault_token' => current($order['transactions'])['payment_method_details']['vault_token']
+                        ]
+                    ],
+                        $this->orderRepository,
+                        $context
+                    );
+                }
                 $this->transactionStateHandler->paid($transactionId, $context);
                 break;
             case 'cancelled' :
@@ -148,6 +202,12 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
                     'Customer cancelled the payment on the ' . $current_ginger_order_transaction['payment_method'] . ' page'
                 );
             case 'processing' :
+                if ($current_ginger_order_transaction['status'] == 'error') {
+                    throw new AsyncPaymentFinalizeException(
+                        $transactionId,
+                        $current_ginger_order_transaction['customer_message'] ?? $current_ginger_order_transaction['reason']
+                    );
+                }
                 $this->transactionStateHandler->process($transactionId, $context);
                 break;
             case 'error' :

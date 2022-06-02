@@ -4,6 +4,7 @@ namespace GingerPlugin\Subscriber;
 
 use Ginger\ApiClient;
 use GingerPlugin\Components\BankConfig;
+use GingerPlugin\Components\GingerExceptionHandlerTrait;
 use GingerPlugin\Exception\CustomPluginException;
 use GingerPlugin\Components\Redefiner;
 use Shopware\Core\Checkout\Cart\Exception\OrderDeliveryNotFoundException;
@@ -16,26 +17,33 @@ use Shopware\Core\System\StateMachine\Event\StateMachineStateChangeEvent;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Framework\Context;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-
+use Shopware\Core\Framework\Log\LoggerFactory;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class CaptureOrder implements EventSubscriberInterface
 {
+    use GingerExceptionHandlerTrait;
+
     protected $ginger;
     private $orderRepository;
     private $orderDeliveryRepository;
     private $orderPaymentRepository;
+    public $loggerFactory;
 
     public function __construct(
         EntityRepositoryInterface $orderPaymentRepository,
         EntityRepositoryInterface $orderRepository,
         EntityRepositoryInterface $orderDeliveryRepository,
-        Redefiner $redefiner
+        Redefiner                 $redefiner,
+        LoggerFactory             $loggerFactory
     )
     {
         $this->orderPaymentRepository = $orderPaymentRepository;
         $this->orderRepository = $orderRepository;
         $this->orderDeliveryRepository = $orderDeliveryRepository;
         $this->ginger = $redefiner->getClient();
+        $this->loggerFactory = $loggerFactory;
     }
 
     /**
@@ -52,8 +60,9 @@ class CaptureOrder implements EventSubscriberInterface
     /**
      * @throws OrderDeliveryNotFoundException
      * @throws OrderNotFoundException
+     * @throws \Exception
      */
-    public function onOrderDeliveryStateChange(StateMachineStateChangeEvent $event): void
+    public function onOrderDeliveryStateChange(StateMachineStateChangeEvent $event)
     {
         $orderDeliveryId = $event->getTransition()->getEntityId();
         $context = $event->getContext();
@@ -89,20 +98,21 @@ class CaptureOrder implements EventSubscriberInterface
 
         $ginger_order_id = $order->getCustomFields()['ginger_order_id'];
 
+
+        $gingerOrder = $this->ginger->getOrder($ginger_order_id);
+        $current_transaction = current($gingerOrder['transactions']);
+        $transactionId = ($current_transaction)['id'] ?? null;
+
+        if (!$transactionId) {
+            return;
+        }
+
         try {
-            $gingerOrder = $this->ginger->getOrder($ginger_order_id);
-            $current_transaction = current($gingerOrder['transactions']);
-            $transactionId = ($current_transaction)['id'] ?? null;
-
-            if (!$transactionId) {
-                return;
-            }
-
-            if ($current_transaction['is_capturable'] && !in_array('has-captures',$gingerOrder['flags'])) {
+            if ($current_transaction['is_capturable'] && !in_array('has-captures', $gingerOrder['flags'])) {
                 $this->ginger->captureOrderTransaction($ginger_order_id, $transactionId);
             }
         } catch (\Exception $exception) {
-            throw new CustomPluginException($exception->getMessage(), 500, 'GINGER_ERROR_CAPTURE_ORDER');
+            $this->handleException($exception, $event);
         }
     }
 
@@ -110,7 +120,8 @@ class CaptureOrder implements EventSubscriberInterface
      * Retrieving order for Shopware storage (repository)
      * @throws OrderNotFoundException
      */
-    private function getOrder(string $orderId, Context $context): OrderEntity
+    private
+    function getOrder(string $orderId, Context $context): OrderEntity
     {
         $orderCriteria = $this->getOrderCriteria($orderId);
         /** @var OrderEntity|null $order */
@@ -122,7 +133,8 @@ class CaptureOrder implements EventSubscriberInterface
         return $order;
     }
 
-    private function getOrderCriteria(string $orderId): Criteria
+    private
+    function getOrderCriteria(string $orderId): Criteria
     {
         $orderCriteria = new Criteria([$orderId]);
         $orderCriteria->addAssociation('transactions');

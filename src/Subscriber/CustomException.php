@@ -4,6 +4,7 @@ namespace GingerPlugin\Subscriber;
 
 use Dompdf\Exception;
 use GingerPlugin\Components\BankConfig;
+use GingerPlugin\Components\GingerCustomerNotifierTrait;
 use GingerPlugin\Exception\CustomStorefrontExceptionInterface;
 use Monolog\Processor\WebProcessor;
 use Shopware\Core\Framework\Api\EventListener\ErrorResponseFactory;
@@ -19,6 +20,8 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class CustomException implements EventSubscriberInterface
 {
+    use GingerCustomerNotifierTrait;
+
     private $loggerFactory;
     private $errorController;
     private $requestStack;
@@ -56,7 +59,8 @@ class CustomException implements EventSubscriberInterface
 
         if ($event->getThrowable() instanceof CustomStorefrontExceptionInterface) {
             $this->saveToBacklog($exception->getMessage(), ['FILE' => $exception->getFile(), 'FUNCTION' => $exception->getTrace()[0]['function'], 'LINE' => $exception->getLine()]);
-            $event->setResponse((new ErrorResponseFactory())->getResponseFromException($exception, true));
+            $this->showWarning($event, $exception->getMessage());
+            //$event->setResponse((new ErrorResponseFactory())->getResponseFromException($exception, true));
         }
 
         if ($event->getRequest()->attributes->get(SalesChannelRequest::ATTRIBUTE_IS_SALES_CHANNEL_REQUEST)) {
@@ -74,10 +78,14 @@ class CustomException implements EventSubscriberInterface
 
         $this->saveToBacklog($exception->getMessage(), ['FILE' => $exception->getFile(), 'FUNCTION' => $exception->getTrace()[0]['function'], 'LINE' => $exception->getLine()]);
 
-        $event->setResponse((new ErrorResponseFactory())->getResponseFromException($exception, false));
+        $this->showWarning($event, $exception->getMessage());
+
+        //      $event->setResponse((new ErrorResponseFactory())->getResponseFromException($exception, false));
 
         return $event;
     }
+
+
 
     /**
      * Function save to log

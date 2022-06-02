@@ -1,8 +1,14 @@
 {
-    "require": {
-        "gingerpayments/ginger-php": "^2.1"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^9.3.7"
+  "require": {
+    "gingerpayments/ginger-php": "^2.1"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.3.7"
+  },
+  "repositories": [
+    {
+      "url": "https://github.com/tiutiunnykleasoft/ginger-php-plugin-sdk.git",
+      "type": "git"
     }
+    ]
 }

@@ -4,11 +4,14 @@ namespace GingerPlugin\Service;
 
 use Ginger\Ginger;
 use GingerPlugin\Components\BankConfig;
+use GingerPlugin\Components\GingerExceptionHandlerTrait;
 use GingerPlugin\Exception\CustomPluginException;
 
 
 class ClientBuilder
 {
+    use GingerExceptionHandlerTrait;
+
     public $config;
     private $api_key;
 
@@ -17,10 +20,9 @@ class ClientBuilder
      *
      * @param string $apiKey
      * @param boolean $useBundle
-     * @return Ginger
-     * @throws CustomPluginException
+     * @return \Ginger\ApiClient|void
      */
-    public function getGingerClient(string $apiKey, $useBundle = false)
+    public function getGingerClient(string $apiKey, bool $useBundle)
     {
         $this->api_key = $apiKey;
         try {
@@ -30,10 +32,10 @@ class ClientBuilder
                 $useBundle ?
                     [
                         CURLOPT_CAINFO => self::getCaCertPath()
-                    ] : []
+                    ] : [],
             );
         } catch (\Exception $exception) {
-            throw new CustomPluginException($exception->getMessage(), 500, 'GINGER_FAILED_BUILD_CLIENT');
+            $this->handleException($exception);
         }
     }
 

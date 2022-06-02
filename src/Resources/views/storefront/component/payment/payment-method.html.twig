@@ -34,6 +34,9 @@
     {% if payment.customFields.payment_name is same as('ginger_afterpay') %}
         {% sw_include '@Storefront/storefront/component/payment/ginger_afterpay_form.html.twig' %}
     {% endif %}
+    {% if payment.customFields.payment_name is same as('ginger_applepay') %}
+        {% sw_include '@Storefront/storefront/component/payment/ginger_applepay_detection.html.twig' %}
+    {% endif %}
     <script type="text/javascript">
 
         function set_buttons_disabled_state(state) {

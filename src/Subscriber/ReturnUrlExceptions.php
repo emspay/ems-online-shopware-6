@@ -3,6 +3,7 @@
 namespace GingerPlugin\Subscriber;
 
 use Ginger\ApiClient;
+use GingerPlugin\Components\GingerExceptionHandlerTrait;
 use GingerPlugin\Exception\CustomPluginException;
 use GingerPlugin\Components\Redefiner;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -10,6 +11,8 @@ use Shopware\Storefront\Page\Account\Order\AccountEditOrderPageLoadedEvent;
 
 class ReturnUrlExceptions implements EventSubscriberInterface
 {
+    use GingerExceptionHandlerTrait;
+
     public $client;
 
     /**
@@ -45,22 +48,41 @@ class ReturnUrlExceptions implements EventSubscriberInterface
                 $event->getPage()->getOrder()->getCustomFields()
             ));
         } catch (\Exception $exception) {
-            throw new CustomPluginException($exception->getMessage(), 500, 'GINGER_UPDATE_CUSTOM_FIELDS_ERROR_ERROR');
+            $this->handleException($exception, $event);
         }
     }
 
     public function determinateMessage($order_custom_fields): string
     {
         if (!array_key_exists('ginger_order_id', $order_custom_fields)) {
+            if (array_key_exists('error_message', $order_custom_fields)) {
+                return $order_custom_fields['error_message'];
+            }
             return 'Sorry, at this time payment method cannot process entered data.';
         }
 
         $gingerOrder = $this->client->getOrder($order_custom_fields['ginger_order_id']);
-        if ($gingerOrder['status'] == 'error') {
-            return current($gingerOrder['transactions'])['customer_message'];
-        }
-        if ($gingerOrder['status'] == 'new') {
-            return 'The payment was canceled on the payment provider page';
+
+        $processing = function ($gingerOrder) {
+            $message = 'The payment is processing. ';
+            $transaction = current($gingerOrder['transactions']);
+            if ($transaction['status'] == 'error') {
+                $message .= $transaction['customer_message'] ?? $transaction['reason'];
+            }
+            return $message;
+        };
+
+        switch ($gingerOrder['status']) {
+            case 'error':
+                return current($gingerOrder['transactions'])['customer_message'];
+            case 'new':
+                return 'The payment was canceled on the payment provider page';
+            case 'expired':
+                return 'The payment is expired, for now, it is not possible to reopen the order.';
+            case 'processing' :
+                return $processing($gingerOrder);
+            default :
+                return sprintf("The order status is out of scope : %s", $gingerOrder["status"]);
         }
     }
 }

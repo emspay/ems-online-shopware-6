@@ -13,6 +13,7 @@
             <argument type="service"
                       id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+            <argument type="service" id="Shopware\Core\Framework\Log\LoggerFactory"/>
             <tag name="shopware.payment.method.async"/>
         </service>
         <service id="GingerPlugin\Service\PluginEntryPoint"/>
@@ -35,7 +36,6 @@
         </service>
         <service class="GingerPlugin\Subscriber\PaymentsKeeper" id="ginger.subscriber.payments_keeper">
             <argument type="service" id="GingerPlugin\Components\Redefiner"/>
-            <argument type="service" id="payment_method.repository"/>
             <tag name="kernel.event_subscriber"/>
         </service>
         <service class="GingerPlugin\Subscriber\ReturnUrlExceptions" id="ginger.subscriber.return_url_exceptions">
@@ -45,6 +45,8 @@
         <service class="GingerPlugin\Subscriber\PaymentsCustomFields" id="ginger.subscriber.payments_custom_fields">
             <argument type="service" id="payment_method.repository"/>
             <argument type="service" id="GingerPlugin\Components\Redefiner"/>
+            <argument type="service" id="Shopware\Core\Framework\Log\LoggerFactory"/>
+            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
             <tag name="kernel.event_subscriber"/>
         </service>
         <service class="GingerPlugin\Subscriber\CaptureOrder" id="ginger.subscriber.capture_order">
@@ -52,6 +54,7 @@
             <argument type="service" id="order.repository"/>
             <argument type="service" id="order_delivery.repository"/>
             <argument type="service" id="GingerPlugin\Components\Redefiner"/>
+            <argument type="service" id="Shopware\Core\Framework\Log\LoggerFactory"/>
             <tag name="kernel.event_subscriber"/>
         </service>
         <service class="GingerPlugin\Subscriber\RefundOrder" id="ginger.subscriber.refund_order">

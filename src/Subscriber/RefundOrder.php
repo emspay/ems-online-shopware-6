@@ -4,6 +4,7 @@ namespace GingerPlugin\Subscriber;
 
 use Ginger\ApiClient;
 use GingerPlugin\Components\BankConfig;
+use GingerPlugin\Components\GingerExceptionHandlerTrait;
 use GingerPlugin\Exception\CustomPluginException;
 use GingerPlugin\Components\Redefiner;
 use Shopware\Core\Checkout\Cart\Exception\OrderTransactionNotFoundException;
@@ -20,6 +21,8 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class RefundOrder implements EventSubscriberInterface
 {
+    use GingerExceptionHandlerTrait;
+
     protected $ginger;
     private $orderRepository;
     private $orderPaymentRepository;
@@ -110,7 +113,7 @@ class RefundOrder implements EventSubscriberInterface
                 'order_lines' => $this->checkGingerOrderCapturingStatus($gingerOrder)
             ]));
         } catch (\Exception $exception) {
-            throw new CustomPluginException($exception->getMessage(), 500, 'GINGER_ERROR_CAPTURE_ORDER');
+            $this->handleException($exception,$event);
         }
     }
 
