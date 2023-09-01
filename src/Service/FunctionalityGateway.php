@@ -4,14 +4,8 @@ namespace GingerPlugin\Service;
 
 use GingerPlugin\Components\BankConfig;
 use GingerPlugin\Components\GingerExceptionHandlerTrait;
-use GingerPlugin\Exception\CustomPluginException;
-use GingerPlugin\Components\Redefiner;
-use Ginger\ApiClient;
-use http\Exception;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
-use Shopware\Core\Framework\Event\ShopwareSalesChannelEvent;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\AsynchronousPaymentHandlerInterface;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
@@ -22,6 +16,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentFinalizeException;
 use Shopware\Core\Framework\Log\LoggerFactory;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 
 class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHandlerInterface
 {
@@ -34,14 +29,14 @@ class FunctionalityGateway extends OrderBuilder implements AsynchronousPaymentHa
 
     /**
      * Gateway constructor.
-     * @param EntityRepositoryInterface $orderRepository
+     * @param EntityRepository $orderRepository
      * @param OrderTransactionStateHandler $transactionStateHandler
-     * @param \Shopware\Core\System\SystemConfig\SystemConfigService $configService
+     * @param SystemConfigService $configService
      * @param LoggerFactory $loggerFactory
      */
     public function __construct
     (
-        EntityRepositoryInterface    $orderRepository,
+        EntityRepository   $orderRepository,
         OrderTransactionStateHandler $transactionStateHandler,
         SystemConfigService          $configService,
         LoggerFactory                $loggerFactory

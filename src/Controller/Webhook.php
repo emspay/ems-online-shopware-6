@@ -10,12 +10,11 @@ use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStat
 use Shopware\Core\Framework\Context;
 use Symfony\Component\HttpFoundation\Request;
 
-# don't remove this 2 uses, important for shopware classes!
-use Shopware\Core\Framework\Routing\Annotation\RouteScope;
+# don't remove this uses, important for shopware classes!
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @RouteScope(scopes={"storefront"})
+ * @Route(defaults={"_routeScope"={"storefront"}})
  */
 class Webhook extends StorefrontController
 {

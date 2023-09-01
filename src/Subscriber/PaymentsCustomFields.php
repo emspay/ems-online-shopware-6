@@ -15,6 +15,7 @@ use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPageLoadedEvent;
 use Shopware\Core\System\SalesChannel\Event\SalesChannelContextSwitchEvent;
 use Shopware\Core\Framework\Log\LoggerFactory;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 
 class PaymentsCustomFields implements EventSubscriberInterface
 {
@@ -27,13 +28,13 @@ class PaymentsCustomFields implements EventSubscriberInterface
 
     /**
      * paymentsCustomFields constructor.
-     * @param EntityRepositoryInterface $paymentMethodRepository
+     * @param EntityRepository $paymentMethodRepository
      * @param Redefiner $redefiner
      * @param LoggerFactory $loggerFactory
      * @param SystemConfigService $systemConfigService
      */
     public function __construct(
-        EntityRepositoryInterface $paymentMethodRepository,
+        EntityRepository $paymentMethodRepository,
         Redefiner                 $redefiner,
         LoggerFactory             $loggerFactory,
         SystemConfigService       $systemConfigService)

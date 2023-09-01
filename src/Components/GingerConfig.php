@@ -25,6 +25,7 @@ class GingerConfig
             'googlepay' => 'google-pay',
             'klarnadirectdebit' => 'klarna-direct-debit',
             'sofort' => 'sofort',
+            'viacash' => 'viacash'
         ];
 
     const PLUGIN_SETTINGS = [
@@ -54,6 +55,7 @@ class GingerConfig
         'sofort' => 'Sofort',
         'klarnadirectdebit' => 'Klarna Direct Debit',
         'googlepay' => 'Google Pay',
+        'viacash' => 'Viacash'
     ];
 
     const GINGER_IP_VALIDATION_PAYMENTS = [

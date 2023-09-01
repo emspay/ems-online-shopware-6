@@ -2,22 +2,17 @@
 
 namespace GingerPlugin\Subscriber;
 
-use Ginger\ApiClient;
-use GingerPlugin\Components\BankConfig;
 use GingerPlugin\Components\GingerExceptionHandlerTrait;
-use GingerPlugin\Exception\CustomPluginException;
 use GingerPlugin\Components\Redefiner;
 use Shopware\Core\Checkout\Cart\Exception\OrderTransactionNotFoundException;
 use Shopware\Core\Checkout\Cart\Exception\OrderNotFoundException;
-use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
-use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\System\StateMachine\Event\StateMachineStateChangeEvent;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Framework\Context;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 
 class RefundOrder implements EventSubscriberInterface
 {
@@ -29,9 +24,9 @@ class RefundOrder implements EventSubscriberInterface
     private $orderTransactionRepository;
 
     public function __construct(
-        EntityRepositoryInterface $orderPaymentRepository,
-        EntityRepositoryInterface $orderRepository,
-        EntityRepositoryInterface $orderTransactionRepository,
+        EntityRepository $orderPaymentRepository,
+        EntityRepository $orderRepository,
+        EntityRepository $orderTransactionRepository,
         Redefiner                 $redefiner
     )
     {
