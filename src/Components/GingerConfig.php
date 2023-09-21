@@ -48,7 +48,7 @@ class GingerConfig
         'amex' => 'American Express',
         'bancontact' => 'Bancontact',
         'banktransfer' => 'Bank Transfer',
-        'creditcard' => 'Credit Card',
+        'creditcard' => 'Credit or Debit Card',
         'paypal' => 'PayPal',
         'payconiq' => 'Payconiq',
         'tikkiepaymentrequest' => 'Tikkie Payment Request',
